@@ -1,16 +1,17 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { GameState, LogEntry, TableType, UnlockState } from './types';
-import { EQUIPMENT_SLOTS, REGIONS_LIST, SKILLS_LIST, REGION_GROUPS, MOBILITY_LIST, POWER_LIST, CONTENT_LIST, EQUIPMENT_TIER_MAX } from './constants';
+import { EQUIPMENT_SLOTS, REGIONS_LIST, SKILLS_LIST, REGION_GROUPS, MOBILITY_LIST, POWER_LIST, MINIGAMES_LIST, BOSSES_LIST, EQUIPMENT_TIER_MAX, REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, WIKI_OVERRIDES } from './constants';
 import { ActionSection } from './components/ActionSection';
 import { GachaSection } from './components/GachaSection';
 import { Dashboard } from './components/Dashboard';
 import { LogViewer } from './components/LogViewer';
 import { FateMechanics } from './components/FateMechanics';
+import { VoidReveal } from './components/VoidReveal';
 import { Key, BookOpen, Dices, Shield, Skull, Sparkles, Download, Upload, Save, RotateCcw } from 'lucide-react';
 
 // --- Utils ---
-const uuid = () => Math.random().toString(36).substring(2, 11);
+const uuid = () => Math.random().toString(36).substr(2, 9);
 const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
 const STORAGE_KEY = 'FATE_UIM_SAVE_V1';
@@ -26,8 +27,72 @@ const DEFAULT_UNLOCKS: UnlockState = {
   regions: [],
   mobility: [],
   power: [],
-  content: []
+  minigames: [],
+  bosses: []
 };
+
+// Pending unlock state type
+interface PendingUnlock {
+  table: string; // The category (Skill, Equipment, Region, etc.)
+  item: string; // The specific item name
+  costType: 'key' | 'specialKey';
+  displayType: string; // For the animation title
+  itemImage?: string; // Image to display
+}
+
+// Fetch Main Image from OSRS Wiki API
+const fetchWikiImage = async (pageName: string): Promise<string | null> => {
+    try {
+        const title = WIKI_OVERRIDES[pageName] || pageName;
+        const endpoint = `https://oldschool.runescape.wiki/api.php`;
+        const params = new URLSearchParams({
+            action: 'query',
+            titles: title,
+            prop: 'pageimages',
+            format: 'json',
+            pithumbsize: '600',
+            origin: '*'
+        });
+
+        const res = await fetch(`${endpoint}?${params.toString()}`);
+        const data = await res.json();
+        const pages = data.query?.pages;
+        if (!pages) return null;
+
+        const pageId = Object.keys(pages)[0];
+        if (pageId === '-1') return null;
+
+        return pages[pageId].thumbnail?.source || null;
+    } catch (e) {
+        console.error("Wiki Image Fetch Error:", e);
+        return null;
+    }
+};
+
+// Helper to resolve OSRS Image URL (Sync version for known assets)
+const getUnlockImage = (table: string, item: string) => {
+    const baseUrl = 'https://oldschool.runescape.wiki/images/';
+
+    if (table === 'skill') {
+        return `${baseUrl}${item}_icon.png`;
+    }
+    if (table === 'equipment') {
+        const config = SLOT_CONFIG[item];
+        return config ? `${baseUrl}${config.file}` : undefined;
+    }
+    if (table === 'region') {
+        // Fallback or Initial Placeholder (Globe or Icon)
+        // We will fetch the real image asynchronously, but having a placeholder is good
+        return REGION_ICONS[item] ? `${baseUrl}${REGION_ICONS[item]}` : `${baseUrl}Globe_icon.png`;
+    }
+    // Check special maps (mobility, power, boss, minigame)
+    const specialIcon = SPECIAL_ICONS[item];
+    if (specialIcon) {
+        return `${baseUrl}${specialIcon}`;
+    }
+
+    return undefined;
+}
 
 function App() {
   // --- Initialization Logic ---
@@ -50,18 +115,42 @@ function App() {
   const [specialKeys, setSpecialKeys] = useState<number>(savedData.specialKeys ?? 0); // Omni-Keys
   const [fatePoints, setFatePoints] = useState<number>(savedData.fatePoints ?? 0);
   
-  // Merge saved unlocks with default structure to ensure new fields are handled if schema changes
-  const [unlocks, setUnlocks] = useState<UnlockState>({
-    ...DEFAULT_UNLOCKS,
-    ...savedData.unlocks,
-    // Deep merge specific objects to prevent overwriting with partial data if constants change
-    equipment: { ...DEFAULT_UNLOCKS.equipment, ...savedData.unlocks?.equipment },
-    skills: { ...DEFAULT_UNLOCKS.skills, ...savedData.unlocks?.skills },
-    levels: { ...DEFAULT_UNLOCKS.levels, ...savedData.unlocks?.levels }
+  // Merge saved unlocks with default structure and handle migration
+  const [unlocks, setUnlocks] = useState<UnlockState>(() => {
+    let initialUnlocks = {
+        ...DEFAULT_UNLOCKS,
+        ...savedData.unlocks,
+        equipment: { ...DEFAULT_UNLOCKS.equipment, ...savedData.unlocks?.equipment },
+        skills: { ...DEFAULT_UNLOCKS.skills, ...savedData.unlocks?.skills },
+        levels: { ...DEFAULT_UNLOCKS.levels, ...savedData.unlocks?.levels }
+    };
+
+    // MIGRATION: content -> minigames/bosses
+    if (savedData.unlocks && (savedData.unlocks as any).content) {
+       const legacyContent = (savedData.unlocks as any).content as string[];
+       const newMinigames = new Set([...initialUnlocks.minigames]);
+       const newBosses = new Set([...initialUnlocks.bosses]);
+
+       legacyContent.forEach(item => {
+           if (BOSSES_LIST.includes(item)) {
+               newBosses.add(item);
+           } else if (MINIGAMES_LIST.includes(item)) {
+               newMinigames.add(item);
+           }
+       });
+       initialUnlocks.minigames = Array.from(newMinigames);
+       initialUnlocks.bosses = Array.from(newBosses);
+       // We intentionally don't delete 'content' to avoid mutation issues, it just won't be used
+    }
+
+    return initialUnlocks;
   });
   
   const [history, setHistory] = useState<LogEntry[]>(savedData.history ?? []);
   
+  // Animation State
+  const [pendingUnlock, setPendingUnlock] = useState<PendingUnlock | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- Persistence Hook ---
@@ -109,13 +198,33 @@ function App() {
               setKeys(json.keys ?? 0);
               setSpecialKeys(json.specialKeys ?? 0);
               setFatePoints(json.fatePoints ?? 0);
-              setUnlocks({
+
+              // Handle migration on import too
+              let newUnlocks = {
                   ...DEFAULT_UNLOCKS,
                   ...json.unlocks,
                   equipment: { ...DEFAULT_UNLOCKS.equipment, ...json.unlocks?.equipment },
                   skills: { ...DEFAULT_UNLOCKS.skills, ...json.unlocks?.skills },
                   levels: { ...DEFAULT_UNLOCKS.levels, ...json.unlocks?.levels }
-              });
+              };
+
+              if (json.unlocks && json.unlocks.content) {
+                   const legacyContent = json.unlocks.content as string[];
+                   const newMinigames = new Set([...newUnlocks.minigames]);
+                   const newBosses = new Set([...newUnlocks.bosses]);
+
+                   legacyContent.forEach(item => {
+                       if (BOSSES_LIST.includes(item)) {
+                           newBosses.add(item);
+                       } else if (MINIGAMES_LIST.includes(item)) {
+                           newMinigames.add(item);
+                       }
+                   });
+                   newUnlocks.minigames = Array.from(newMinigames);
+                   newUnlocks.bosses = Array.from(newBosses);
+              }
+
+              setUnlocks(newUnlocks);
               setHistory(json.history ?? []);
            }
         } else {
@@ -155,10 +264,6 @@ function App() {
 
   // --- Core Game Logic ---
 
-  /**
-   * Centralized logic for rolling for a key (Quests, CAs, Level Ups).
-   * Handles Success, Failure, and Pity logic.
-   */
   const processRoll = useCallback((source: string, threshold: number, isLevelUp: boolean = false) => {
     const roll = rollDice(100);
     const success = roll <= threshold;
@@ -263,33 +368,25 @@ function App() {
    * Handle Special Omni-Key Unlock
    * Directly unlocks a specific item, bypassing RNG.
    */
-  const handleSpecialUnlock = (type: 'skill' | 'equipment' | 'region' | 'mobility' | 'power' | 'content', name: string) => {
+  const handleSpecialUnlock = async (type: string, name: string) => {
     if (specialKeys <= 0) return;
 
-    setSpecialKeys(prev => prev - 1);
+    // Trigger Animation instead of immediate unlock
+    setPendingUnlock({
+      table: type,
+      item: name,
+      costType: 'specialKey',
+      displayType: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize
+      itemImage: getUnlockImage(type, name)
+    });
 
-    if (type === 'skill') {
-         setUnlocks(prev => ({
-            ...prev,
-            skills: { ...prev.skills, [name]: (prev.skills[name] || 0) + 1 }
-        }));
-    } else if (type === 'equipment') {
-         setUnlocks(prev => ({
-            ...prev,
-            equipment: { ...prev.equipment, [name]: (prev.equipment[name] || 0) + 1 }
-        }));
-    } else if (type === 'region') {
-         setUnlocks(prev => ({ ...prev, regions: [...prev.regions, name] }));
-    } else if (type === 'mobility') {
-         setUnlocks(prev => ({ ...prev, mobility: [...prev.mobility, name] }));
-    } else if (type === 'power') {
-         setUnlocks(prev => ({ ...prev, power: [...prev.power, name] }));
-    } else if (type === 'content') {
-         setUnlocks(prev => ({ ...prev, content: [...prev.content, name] }));
+    // Try fetching better image for regions
+    if (type === 'region') {
+         const imageUrl = await fetchWikiImage(name);
+         if (imageUrl) {
+             setPendingUnlock(prev => (prev && prev.item === name ? { ...prev, itemImage: imageUrl } : prev));
+         }
     }
-    
-    addLog({ type: 'UNLOCK', message: `Omni-Unlock: ${name}`, details: 'Used 1 Omni-Key to bypass RNG.' });
-    playSound('unlock');
   };
 
   /**
@@ -325,7 +422,7 @@ function App() {
     return { success: false, item, msg: `Re-roll: ${item} (Duplicate).` };
   };
 
-  const handleUnlock = (table: TableType) => {
+  const handleUnlock = async (table: TableType) => {
     if (keys <= 0) return;
 
     // --- SKILLS LOGIC ---
@@ -335,45 +432,38 @@ function App() {
         
         if (totalTiers >= (SKILLS_LIST.length * 10)) return;
 
-        setKeys(prev => prev - 1);
-
+        // Perform RNG
         const result = performGachaPull(SKILLS_LIST, (skill) => {
             const tier = currentSkills[skill] || 0;
             return tier < 10;
         });
 
         if (!result.success) {
+            setKeys(prev => prev - 1); // Fail still costs a key in typical gacha, or we can refund. Assuming spend.
             addLog({ type: 'ROLL', result: 'FAIL', message: result.msg, details: 'The key crumbles to dust.' });
             playSound('fail');
             return;
         }
 
         const skill = result.item;
-        const newTier = (currentSkills[skill] || 0) + 1;
         
-        setUnlocks(prev => ({
-            ...prev,
-            skills: { ...prev.skills, [skill]: newTier }
-        }));
-        
-        const levelCap = newTier === 10 ? 99 : newTier * 10;
-        addLog({
-            type: 'UNLOCK',
-            message: `Upgraded: ${skill}`,
-            details: `Tier ${newTier} Unlocked (Levels 1-${levelCap})`
+        // Defer Unlock
+        setPendingUnlock({
+            table: 'skill',
+            item: skill,
+            costType: 'key',
+            displayType: 'Skill',
+            itemImage: getUnlockImage('skill', skill)
         });
-        playSound('unlock');
         return;
     }
 
-    // --- EQUIPMENT LOGIC (With Tiers) ---
+    // --- EQUIPMENT LOGIC ---
     if (table === TableType.EQUIPMENT) {
        const currentEquip = unlocks.equipment;
        const totalEquipTiers = (Object.values(currentEquip) as number[]).reduce((a, b) => a + b, 0);
        
        if (totalEquipTiers >= (EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX)) return;
-
-       setKeys(prev => prev - 1);
 
        const result = performGachaPull(EQUIPMENT_SLOTS, (slot) => {
            const tier = currentEquip[slot] || 0;
@@ -381,38 +471,34 @@ function App() {
        });
 
        if (!result.success) {
+           setKeys(prev => prev - 1);
            addLog({ type: 'ROLL', result: 'FAIL', message: result.msg, details: 'The key crumbles to dust.' });
            playSound('fail');
            return;
        }
 
        const slot = result.item;
-       const newTier = (currentEquip[slot] || 0) + 1;
 
-       setUnlocks(prev => ({
-           ...prev,
-           equipment: { ...prev.equipment, [slot]: newTier }
-       }));
-
-       addLog({
-           type: 'UNLOCK',
-           message: `Upgraded: ${slot}`,
-           details: `Tier ${newTier} Unlocked`
+       setPendingUnlock({
+           table: 'equipment',
+           item: slot,
+           costType: 'key',
+           displayType: 'Equipment',
+           itemImage: getUnlockImage('equipment', slot)
        });
-       playSound('unlock');
        return;
     }
 
-    // --- GENERIC LIST LOGIC (Region, Mobility, Power, Content) ---
+    // --- GENERIC LIST LOGIC ---
     let pool: string[] = [];
     let currentUnlocks: string[] = [];
-    let stateKey: keyof UnlockState;
+    let stateKey: string = ''; // Just to identify mapping
 
     switch (table) {
         case TableType.REGIONS:
             pool = REGIONS_LIST;
             currentUnlocks = unlocks.regions;
-            stateKey = 'regions';
+            stateKey = 'region';
             break;
         case TableType.MOBILITY:
             pool = MOBILITY_LIST;
@@ -424,10 +510,15 @@ function App() {
             currentUnlocks = unlocks.power;
             stateKey = 'power';
             break;
-        case TableType.CONTENT:
-            pool = CONTENT_LIST;
-            currentUnlocks = unlocks.content;
-            stateKey = 'content';
+        case TableType.MINIGAMES:
+            pool = MINIGAMES_LIST;
+            currentUnlocks = unlocks.minigames;
+            stateKey = 'minigame';
+            break;
+        case TableType.BOSSES:
+            pool = BOSSES_LIST;
+            currentUnlocks = unlocks.bosses;
+            stateKey = 'boss';
             break;
         default:
             return;
@@ -435,11 +526,10 @@ function App() {
 
     if (currentUnlocks.length >= pool.length) return;
 
-    setKeys(prev => prev - 1);
-
     const result = performGachaPull(pool, (item) => !currentUnlocks.includes(item));
 
     if (!result.success) {
+       setKeys(prev => prev - 1);
        addLog({ type: 'ROLL', result: 'FAIL', message: result.msg, details: 'The key crumbles to dust. No unlock.' });
        playSound('fail');
        return;
@@ -447,24 +537,81 @@ function App() {
 
     const item = result.item;
     
-    // Type-safe update of state based on the selected key
-    setUnlocks(prev => ({
-        ...prev,
-        [stateKey]: [...(prev[stateKey] as string[]), item]
-    }));
+    // Initial Reveal with default icon
+    setPendingUnlock({
+        table: stateKey,
+        item: item,
+        costType: 'key',
+        displayType: table, // Use the Table enum string for display (e.g. "Regions")
+        itemImage: getUnlockImage(stateKey, item)
+    });
 
-    let logMessage = `Unlocked: ${item}`;
+    // Attempt to fetch high-quality image from Wiki for Regions
     if (table === TableType.REGIONS) {
-       const parentRegion = Object.keys(REGION_GROUPS).find(key => REGION_GROUPS[key].includes(item));
-       if (parentRegion) logMessage += ` (${parentRegion})`;
+         const imageUrl = await fetchWikiImage(item);
+         if (imageUrl) {
+             // Only update if the user hasn't closed it yet (check item name match)
+             setPendingUnlock(prev => (prev && prev.item === item ? { ...prev, itemImage: imageUrl } : prev));
+         }
+    }
+  };
+
+  /**
+   * Finalize the unlock after animation finishes
+   */
+  const finalizeUnlock = () => {
+    if (!pendingUnlock) return;
+
+    const { table, item, costType } = pendingUnlock;
+
+    // Consume Cost
+    if (costType === 'key') setKeys(prev => prev - 1);
+    else setSpecialKeys(prev => prev - 1);
+
+    // Apply State Update
+    if (table === 'skill') {
+         setUnlocks(prev => ({
+            ...prev,
+            skills: { ...prev.skills, [item]: (prev.skills[item] || 0) + 1 }
+        }));
+        const tier = (unlocks.skills[item] || 0) + 1;
+        const levelCap = tier === 10 ? 99 : tier * 10;
+        addLog({
+            type: 'UNLOCK',
+            message: `Upgraded: ${item}`,
+            details: `Tier ${tier} Unlocked (Levels 1-${levelCap})`
+        });
+    } else if (table === 'equipment') {
+         setUnlocks(prev => ({
+            ...prev,
+            equipment: { ...prev.equipment, [item]: (prev.equipment[item] || 0) + 1 }
+        }));
+        const tier = (unlocks.equipment[item] || 0) + 1;
+        addLog({
+           type: 'UNLOCK',
+           message: `Upgraded: ${item}`,
+           details: `Tier ${tier} Unlocked`
+       });
+    } else if (table === 'region') {
+         setUnlocks(prev => ({ ...prev, regions: [...prev.regions, item] }));
+         const parentRegion = Object.keys(REGION_GROUPS).find(key => REGION_GROUPS[key].includes(item));
+         addLog({ type: 'UNLOCK', message: `Unlocked Area: ${item}`, details: parentRegion ? `(${parentRegion})` : 'New Territory' });
+    } else if (table === 'mobility') {
+         setUnlocks(prev => ({ ...prev, mobility: [...prev.mobility, item] }));
+         addLog({ type: 'UNLOCK', message: `Unlocked Mobility: ${item}`, details: 'Travel Network Expanded' });
+    } else if (table === 'power') {
+         setUnlocks(prev => ({ ...prev, power: [...prev.power, item] }));
+         addLog({ type: 'UNLOCK', message: `Unlocked Power: ${item}`, details: 'Ancient secrets revealed...' });
+    } else if (table === 'minigame' || table === 'minigames') {
+         setUnlocks(prev => ({ ...prev, minigames: [...prev.minigames, item] }));
+         addLog({ type: 'UNLOCK', message: `Unlocked Minigame: ${item}`, details: 'New activity available' });
+    } else if (table === 'boss' || table === 'bosses') {
+         setUnlocks(prev => ({ ...prev, bosses: [...prev.bosses, item] }));
+         addLog({ type: 'UNLOCK', message: `Unlocked Boss: ${item}`, details: 'A major threat appears...' });
     }
 
-    addLog({
-      type: 'UNLOCK',
-      message: logMessage,
-      details: `Spent 1 Key on ${table} Table.`
-    });
     playSound('unlock');
+    setPendingUnlock(null);
   };
 
   // --- Render Helpers ---
@@ -479,11 +626,23 @@ function App() {
     regions: unlocks.regions.length < REGIONS_LIST.length,
     mobility: unlocks.mobility.length < MOBILITY_LIST.length,
     power: unlocks.power.length < POWER_LIST.length,
-    content: unlocks.content.length < CONTENT_LIST.length,
+    minigames: unlocks.minigames.length < MINIGAMES_LIST.length,
+    bosses: unlocks.bosses.length < BOSSES_LIST.length,
   };
 
   return (
-    <div className="min-h-screen bg-osrs-bg text-osrs-text pb-12 font-sans selection:bg-osrs-gold selection:text-black">
+    <div className="min-h-screen bg-osrs-bg text-osrs-text pb-12 font-sans selection:bg-osrs-gold selection:text-black relative">
+
+      {/* Animation Overlay */}
+      {pendingUnlock && (
+        <VoidReveal
+            itemName={pendingUnlock.item}
+            itemType={pendingUnlock.displayType}
+            itemImage={pendingUnlock.itemImage}
+            onComplete={finalizeUnlock}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-osrs-panel border-b border-osrs-border sticky top-0 z-50 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -544,7 +703,7 @@ function App() {
                 </div>
               </div>
 
-              {/* Omni Keys (Only show if we have one or just show empty for consistency) */}
+              {/* Omni Keys */}
               <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all ${specialKeys > 0 ? 'bg-purple-900/30 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'bg-black/30 border-osrs-border opacity-50'}`}>
                 <Sparkles className={`w-6 h-6 ${specialKeys > 0 ? 'text-purple-400 animate-pulse' : 'text-gray-600'}`} />
                 <div className="flex flex-col">
@@ -578,16 +737,16 @@ function App() {
         <FateMechanics />
 
         {/* Top Section: Action & Spend */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Left: Actions (Farm) */}
-          <div className="lg:col-span-6 space-y-6">
+          <div className="space-y-6">
             <ActionSection onRoll={handleRoll} />
-            <LogViewer history={history} />
           </div>
 
-          {/* Right: Spend (Gacha) */}
-          <div className="lg:col-span-6">
+          {/* Right: Spend (Gacha) & Log */}
+          <div className="space-y-6">
              <GachaSection keys={keys} onUnlock={handleUnlock} canUnlock={canUnlock} />
+             <LogViewer history={history} />
           </div>
         </div>
 

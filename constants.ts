@@ -37,10 +37,18 @@ export const POWER_LIST = [
   'High Alchemy'
 ];
 
-export const CONTENT_LIST = [
-  // Boss/Minigames (Legacy)
+export const BOSSES_LIST = [
   'Wintertodt', 
   'Tempoross', 
+  'TzHaar Fight Cave',
+  'Inferno',
+  'TzHaar-Ket-Rak\'s Challenges',
+  'The Gauntlet',
+  'Fortis Colosseum'
+];
+
+export const MINIGAMES_LIST = [
+  // Legacy & Misc
   'Shooting Stars',
   
   // Combat Minigames
@@ -49,8 +57,6 @@ export const CONTENT_LIST = [
   'Castle Wars', 
   'Clan Wars', 
   'Emir\'s Arena', 
-  'Fortis Colosseum', 
-  'Inferno', 
   'Intelligence Gathering', 
   'Last Man Standing', 
   'Mage Arena', 
@@ -58,9 +64,7 @@ export const CONTENT_LIST = [
   'Pest Control', 
   'Soul Wars', 
   'Temple Trekking', 
-  'TzHaar Fight Cave', 
   'TzHaar Fight Pit', 
-  'TzHaar-Ket-Rak\'s Challenges',
 
   // Skilling Minigames
   'Archery Competition', 
@@ -89,7 +93,6 @@ export const CONTENT_LIST = [
   // Hybrid
   'Shades of Mort\'ton', 
   'Tai Bwo Wannai Cleanup', 
-  'The Gauntlet', 
   'Warriors\' Guild',
 
   // Misc
@@ -185,11 +188,118 @@ export const DROP_RATES: Record<string, number> = {
   [DropSource.DIARY_HARD]: 75,
   [DropSource.DIARY_ELITE]: 100,
   [DropSource.SLAYER_TASK]: 10,
-  // Clue Scroll Rates (Balanced Linear Progression: 15, 30, 45, 60, 75, 90)
   [DropSource.CLUE_BEGINNER]: 15,
   [DropSource.CLUE_EASY]: 30,
   [DropSource.CLUE_MEDIUM]: 45,
   [DropSource.CLUE_HARD]: 60,
   [DropSource.CLUE_ELITE]: 75,
   [DropSource.CLUE_MASTER]: 90,
+};
+
+// --- ICON & WIKI MAPPINGS ---
+
+export const REGION_ICONS: Record<string, string> = {
+  'Misthalin': 'Varrock_teleport.png',        // Varrock Teleport
+  'Asgarnia': 'Falador_teleport.png',         // Falador Teleport
+  'Kandarin': 'Camelot_teleport.png',         // Camelot Teleport
+  'Karamja': 'Karamja_gloves_1.png',          // Karamja Gloves
+  'Kharidian Desert': 'Desert_amulet_1.png',  // Desert Amulet
+  'Morytania': 'Ectophial.png',               // Ectophial
+  'Fremennik': 'Fremennik_sea_boots_1.png',   // Sea Boots
+  'Tirannwn': 'Crystal_teleport_seed.png',    // Crystal Teleport Seed
+  'Wilderness': 'Wilderness_sword_1.png',     // Wilderness Sword
+  'Kourend & Kebos': 'Xeric\'s_talisman.png', // Xeric's Talisman
+  'Varlamore': 'Civitas_illa_Fortis_teleport.png',
+  'Islands & Others': 'Fossil_Island_Teleport.png',
+  'The Open Seas': 'Sailing_icon.png'
+};
+
+export const SLOT_CONFIG: Record<string, { file: string, gridArea: string }> = {
+  'Head':   { file: 'Head_slot.png', gridArea: 'col-start-2 row-start-1' },
+  'Cape':   { file: 'Cape_slot.png', gridArea: 'col-start-1 row-start-2' },
+  'Neck':   { file: 'Neck_slot.png', gridArea: 'col-start-2 row-start-2' },
+  'Ammo':   { file: 'Ammo_slot.png', gridArea: 'col-start-3 row-start-2' },
+  'Weapon': { file: 'Weapon_slot.png', gridArea: 'col-start-1 row-start-3' },
+  'Body':   { file: 'Body_slot.png', gridArea: 'col-start-2 row-start-3' },
+  'Shield': { file: 'Shield_slot.png', gridArea: 'col-start-3 row-start-3' },
+  'Legs':   { file: 'Legs_slot.png', gridArea: 'col-start-2 row-start-4' },
+  'Gloves': { file: 'Hands_slot.png', gridArea: 'col-start-1 row-start-5' },
+  'Boots':  { file: 'Feet_slot.png', gridArea: 'col-start-2 row-start-5' },
+  'Ring':   { file: 'Ring_slot.png', gridArea: 'col-start-3 row-start-5' },
+};
+
+export const SPECIAL_ICONS: Record<string, string> = {
+  // Mobility
+  'Spirit Trees': 'Spirit_tree_map_icon.png',
+  'Fairy Rings': 'Fairy_ring_map_icon.png',
+  'Gnome Gliders': 'Gnome_glider_map_icon.png',
+  'Charter Ships': 'Charter_Crew_member_icon.png',
+  'Teleport Tablets': 'Teleport_to_house.png',
+  'Jewelry Teleports': 'Games_necklace(8).png',
+  // Power
+  'Ancient Magicks': 'Ancient_Magicks_icon.png',
+  'Lunar Spellbook': 'Lunar_spells_icon.png',
+  'Arceuus Spellbook': 'Arceuus_spells_icon.png',
+  'Protection Prayers': 'Protect_from_Melee_icon.png',
+  'High Alchemy': 'High_Level_Alchemy_icon.png',
+  // Minigames & Bosses
+  'Wintertodt': 'Wintertodt_icon.png',
+  'Tempoross': 'Tempoross_icon.png',
+  'Shooting Stars': 'Celestial_ring.png',
+  'Barbarian Assault': 'Fighter_torso.png',
+  'Bounty Hunter': 'Bounty_hunter_emblem_tier_1.png',
+  'Castle Wars': 'Saradomin_standard.png',
+  'Clan Wars': 'Clan_Wars_cape_(purple).png',
+  'Emir\'s Arena': 'Duel_Arena_teleport.png',
+  'Fortis Colosseum': 'Dizana\'s_quiver.png',
+  'Inferno': 'Infernal_cape.png',
+  'Last Man Standing': 'Victor\'s_cape_(1000).png',
+  'Mage Arena': 'God_cape.png',
+  'Nightmare Zone': 'Black_mask_(i).png',
+  'Pest Control': 'Void_knight_helm.png',
+  'Soul Wars': 'Soul_wars_portal.png',
+  'Temple Trekking': 'Gadderhammer.png',
+  'TzHaar Fight Cave': 'Fire_cape.png',
+  'TzHaar Fight Pit': 'Toktz-ket-xil.png',
+  'TzHaar-Ket-Rak\'s Challenges': 'Tokkul.png',
+  'Archery Competition': 'Bronze_arrow.png',
+  'Blast Furnace': 'Blast_furnace_icon.png',
+  'Brimhaven Agility Arena': 'Agility_arena_ticket.png',
+  'Fishing Trawler': 'Angler_hat.png',
+  'Giants\' Foundry': 'Kovac.png',
+  'Gnome Ball': 'Gnomeball.png',
+  'Gnome Restaurant': 'Mint_cocktail.png',
+  'Guardians of the Rift': 'Abyssal_pearl.png',
+  'Hallowed Sepulchre': 'Hallowed_ring.png',
+  'Impetuous Impulses': 'Eclectic_impling_jar.png',
+  'Mage Training Arena': 'Teacher_wand.png',
+  'Mahogany Homes': 'Carpenter\'s_helmet.png',
+  'Mastering Mixology': 'Mojo_icon.png',
+  'Mess': 'Fried_mushrooms.png',
+  'Pyramid Plunder': 'Pharaoh\'s_sceptre.png',
+  'Rogues\' Den': 'Rogue_kit.png',
+  'Sorceress\'s Garden': 'Summer_sq\'irkjuice.png',
+  'Stealing Artefacts': 'Golden_goblet.png',
+  'Tithe Farm': 'Farmer_Gricoller\'s_can.png',
+  'Trouble Brewing': 'Rum_(blue).png',
+  'Volcanic Mine': 'Volcanic_Mine_teleport.png',
+  'Shades of Mort\'ton': 'Flamtaer_hammer.png',
+  'Tai Bwo Wannai Cleanup': 'Trading_sticks.png',
+  'The Gauntlet': 'Crystal_helm.png',
+  'Warriors\' Guild': 'Dragon_defender.png',
+  'Burthorpe Games Room': 'RuneLink_table.png',
+  'Forestry': 'Forestry_kit.png',
+  'Rat Pits': 'Rat_pole.png',
+  'Tears of Guthix': 'Tears_of_Guthix.png'
+};
+
+export const WIKI_OVERRIDES: Record<string, string> = {
+  'Duel Arena / PvP Arena': 'PvP_Arena',
+  'Miscellania & Etceteria': 'Miscellania',
+  'Isle of Souls (Expanded)': 'Isle_of_Souls',
+  'Mort\'ton': 'Mort\'ton',
+  'Shades of Mort\'ton': 'Shades_of_Mort\'ton',
+  'Civitas illa Fortis': 'Civitas_illa_Fortis',
+  'Hunter\'s Guild': 'Hunter_Guild',
+  'Mor Ul Rek (TzHaar City)': 'Mor_Ul_Rek',
 };

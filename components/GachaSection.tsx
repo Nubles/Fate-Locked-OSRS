@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { TableType } from '../types';
-import { Shield, Map, Hammer, Lock, Dices, Sparkles, Footprints, Zap, Gamepad2, HelpCircle } from 'lucide-react';
-import { CONTENT_LIST } from '../constants';
+import { Shield, Map, Hammer, Lock, Dices, Sparkles, Footprints, Zap, Gamepad2, HelpCircle, Skull } from 'lucide-react';
+import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, MOBILITY_LIST, POWER_LIST, MINIGAMES_LIST, BOSSES_LIST } from '../constants';
 
 interface GachaSectionProps {
   keys: number;
@@ -13,7 +13,8 @@ interface GachaSectionProps {
     regions: boolean;
     mobility: boolean;
     power: boolean;
-    content: boolean;
+    minigames: boolean;
+    bosses: boolean;
   };
 }
 
@@ -25,10 +26,20 @@ interface SpendCardProps {
   disabled: boolean;
   keysAvailable: boolean;
   complete: boolean;
-  colorTheme: 'red' | 'blue' | 'green' | 'amber' | 'violet' | 'cyan';
-  icon: any;
+  icon?: any;
+  iconSrc?: string;
   onClick: () => void;
 }
+
+const OSRS_GACHA_ICONS = {
+  EQUIPMENT: 'https://oldschool.runescape.wiki/images/Equipment_Stats.png',
+  SKILLS: 'https://oldschool.runescape.wiki/images/Stats_icon.png',
+  REGIONS: 'https://oldschool.runescape.wiki/images/World_map_icon.png',
+  MOBILITY: 'https://oldschool.runescape.wiki/images/Graceful_boots.png',
+  POWER: 'https://oldschool.runescape.wiki/images/Ancient_Magicks_icon.png',
+  MINIGAMES: 'https://oldschool.runescape.wiki/images/Minigame_group_finder_icon.png',
+  BOSSES: 'https://oldschool.runescape.wiki/images/Boss_monster_icon.png'
+};
 
 const SpendCard: React.FC<SpendCardProps> = ({
   label,
@@ -37,61 +48,21 @@ const SpendCard: React.FC<SpendCardProps> = ({
   disabled,
   keysAvailable,
   complete,
-  colorTheme,
   icon: Icon,
+  iconSrc,
   onClick
 }) => {
   
+  // Unified OSRS Theme (Gold/Brown)
   const theme = {
-    red: {
-      bg: 'bg-[#2a1a1a]',
-      border: 'border-[#4a2a2a]',
-      hoverBorder: 'hover:border-[#ff4444]',
-      text: 'text-[#ffcccc]',
-      iconBg: 'text-[#ff5555]',
-      glow: 'shadow-[inset_0_0_10px_rgba(255,0,0,0.1)]'
-    },
-    blue: {
-      bg: 'bg-[#1a1f2a]',
-      border: 'border-[#2a3a4a]',
-      hoverBorder: 'hover:border-[#4488ff]',
-      text: 'text-[#cceeff]',
-      iconBg: 'text-[#55aaff]',
-      glow: 'shadow-[inset_0_0_10px_rgba(0,100,255,0.1)]'
-    },
-    green: {
-      bg: 'bg-[#1a2a1f]',
-      border: 'border-[#2a4a3a]',
-      hoverBorder: 'hover:border-[#44ff88]',
-      text: 'text-[#ccffdd]',
-      iconBg: 'text-[#55ff99]',
-      glow: 'shadow-[inset_0_0_10px_rgba(0,255,100,0.1)]'
-    },
-    amber: {
-      bg: 'bg-[#2a241a]',
-      border: 'border-[#4a3f2a]',
-      hoverBorder: 'hover:border-[#ffaa44]',
-      text: 'text-[#ffeedd]',
-      iconBg: 'text-[#ffaa55]',
-      glow: 'shadow-[inset_0_0_10px_rgba(255,150,0,0.1)]'
-    },
-    violet: {
-      bg: 'bg-[#241a2a]',
-      border: 'border-[#3f2a4a]',
-      hoverBorder: 'hover:border-[#aa44ff]',
-      text: 'text-[#eeccee]',
-      iconBg: 'text-[#aa55ff]',
-      glow: 'shadow-[inset_0_0_10px_rgba(150,0,255,0.1)]'
-    },
-    cyan: {
-      bg: 'bg-[#1a282a]',
-      border: 'border-[#2a454a]',
-      hoverBorder: 'hover:border-[#44eeff]',
-      text: 'text-[#ccffff]',
-      iconBg: 'text-[#55eeff]',
-      glow: 'shadow-[inset_0_0_10px_rgba(0,255,255,0.1)]'
-    }
-  }[colorTheme];
+      bg: 'bg-[#2a2620]',
+      border: 'border-[#4a453d]',
+      hoverBorder: 'hover:border-[#fbbf24]',
+      text: 'text-[#d1d5db]',
+      subText: 'text-[#888]',
+      iconBg: 'text-[#fbbf24]', // Gold icon
+      glow: 'shadow-[inset_0_0_15px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_0_10px_rgba(251,191,36,0.1)]'
+  };
 
   const isClickable = !disabled && keysAvailable && !complete;
   const isLocked = !keysAvailable && !complete;
@@ -101,57 +72,63 @@ const SpendCard: React.FC<SpendCardProps> = ({
       onClick={onClick}
       disabled={!isClickable}
       className={`
-        relative overflow-hidden rounded-md border-2 transition-all duration-150 w-full text-left group flex flex-col h-full min-h-[11rem] p-4 shadow-lg
+        relative overflow-hidden rounded-md border-2 transition-all duration-150 w-full text-left group flex flex-col p-3 shadow-lg h-full min-h-[110px]
         ${isClickable 
           ? `${theme.bg} ${theme.border} ${theme.hoverBorder} ${theme.glow} hover:-translate-y-1 hover:shadow-xl` 
           : 'bg-[#111111] border-[#222222] cursor-not-allowed'}
       `}
     >
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
 
       {/* Header: Icon + Price */}
       <div className={`flex justify-between items-start w-full relative z-10 mb-2 transition-opacity duration-300 ${isLocked ? 'opacity-20' : 'opacity-100'}`}>
-        <div className={`p-2 rounded bg-[#0a0a0a] border border-[#333] shadow-inner ${theme.iconBg}`}>
-           <Icon size={24} strokeWidth={1.5} />
+        <div className={`p-1.5 rounded bg-[#1a1814] border border-[#3a352e] shadow-inner ${theme.iconBg} flex items-center justify-center w-8 h-8 shrink-0`}>
+           {iconSrc ? (
+               <img src={iconSrc} alt={label} className="w-5 h-5 object-contain drop-shadow-md" />
+           ) : (
+               Icon && <Icon size={20} strokeWidth={1.5} />
+           )}
         </div>
         
         {complete ? (
-          <span className="px-2 py-1 bg-green-900/40 text-green-400 text-[10px] font-bold uppercase rounded border border-green-800 tracking-wider">
-            Done
-          </span>
+           <div className="flex flex-col items-end h-8 justify-center">
+             <span className="px-2 py-0.5 bg-green-900/40 text-green-400 text-[9px] font-bold uppercase rounded border border-green-800 tracking-wider">
+               Done
+             </span>
+           </div>
         ) : (
-           <div className={`flex flex-col items-end`}>
-              <span className="text-[10px] uppercase tracking-widest text-[#666] font-bold mb-0.5 font-mono">Price</span>
-              <span className="text-osrs-gold font-bold text-xl leading-none text-shadow-osrs">1</span>
+           <div className={`flex flex-col items-end h-8 justify-center`}>
+              <span className="text-[9px] uppercase tracking-widest text-[#666] font-bold leading-none mb-0.5 font-mono">Price</span>
+              <span className="text-osrs-gold font-bold text-lg leading-none text-shadow-osrs">1</span>
            </div>
         )}
       </div>
 
       {/* Middle: Text */}
-      <div className={`relative z-10 mt-1 transition-opacity duration-300 ${isLocked ? 'opacity-20' : 'opacity-100'}`}>
-          <h3 className={`text-lg font-bold ${theme.text} text-shadow-osrs group-hover:text-white transition-colors leading-tight`}>
+      <div className={`relative z-10 flex-1 transition-opacity duration-300 ${isLocked ? 'opacity-20' : 'opacity-100'} w-full`}>
+          <h3 className={`text-sm font-bold ${theme.text} text-shadow-osrs group-hover:text-[#fbbf24] transition-colors leading-tight pr-1 break-words`}>
             {label}
           </h3>
-          <p className="text-[11px] text-[#888] font-mono mt-1 text-shadow-osrs uppercase">{subLabel}</p>
+          <p className={`text-[10px] ${theme.subText} font-mono mt-0.5 text-shadow-osrs uppercase break-words leading-tight`}>{subLabel}</p>
       </div>
 
       {/* Footer: Details + Action */}
-      <div className={`mt-auto flex items-end justify-between w-full relative z-10 pt-3 border-t border-white/5 transition-opacity duration-300 ${isLocked ? 'opacity-20' : 'opacity-100'}`}>
-         <span className="text-[10px] text-[#666] uppercase tracking-widest font-bold">{description}</span>
+      <div className={`mt-3 flex items-center justify-between w-full relative z-10 pt-2 border-t border-white/5 transition-opacity duration-300 ${isLocked ? 'opacity-20' : 'opacity-100'}`}>
+         <span className="text-[9px] text-[#666] uppercase tracking-wide font-bold pr-2 flex-1 leading-tight break-words">{description}</span>
          {isClickable && (
-           <div className="flex items-center gap-1.5 text-xs text-[#aaa] group-hover:text-white transition-colors px-2 py-1 rounded bg-black/40 border border-[#333] shadow-sm">
+           <div className="flex items-center gap-1 text-[10px] text-[#888] group-hover:text-white transition-colors px-1.5 py-0.5 rounded bg-black/30 border border-[#333] shadow-sm whitespace-nowrap shrink-0">
              <span className="font-medium">Roll</span>
-             <Dices size={14} className="group-hover:rotate-12 transition-transform duration-300" />
+             <Dices size={12} className="group-hover:rotate-12 transition-transform duration-300" />
            </div>
          )}
       </div>
 
       {/* Locked Overlay */}
       {isLocked && (
-           <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-               <Lock className="w-8 h-8 mb-2 text-[#555] drop-shadow-md" />
-               <span className="text-[12px] font-bold uppercase tracking-widest text-[#555] font-mono text-shadow-osrs">Need Key</span>
+           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black/20 backdrop-blur-[1px]">
+               <Lock className="w-5 h-5 mb-1 text-[#666] drop-shadow-md" />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-[#666] font-mono text-shadow-osrs">Need Key</span>
            </div>
       )}
     </button>
@@ -160,115 +137,124 @@ const SpendCard: React.FC<SpendCardProps> = ({
 
 export const GachaSection: React.FC<GachaSectionProps> = ({ keys, onUnlock, canUnlock }) => {
   return (
-    <div className="bg-[#1b1b1b] border border-[#2d2d2d] rounded-lg h-full flex flex-col relative">
+    <div className="bg-[#1b1b1b] border border-[#2d2d2d] rounded-lg h-auto flex flex-col relative">
       {/* Header */}
-      <div className="flex justify-between items-center p-6 border-b border-[#2d2d2d]">
+      <div className="flex justify-between items-center p-4 border-b border-[#2d2d2d]">
         <div className="flex items-center gap-2">
-           <Sparkles className="w-5 h-5 text-osrs-gold drop-shadow-md" />
-           <h2 className="text-xl font-bold text-osrs-gold uppercase tracking-wide text-shadow-osrs">Spend Keys</h2>
+           <Sparkles className="w-4 h-4 text-osrs-gold drop-shadow-md" />
+           <h2 className="text-lg font-bold text-osrs-gold uppercase tracking-wide text-shadow-osrs">Spend Keys</h2>
            <div className="group relative flex items-center ml-1 z-50">
-              <HelpCircle className="w-4 h-4 text-gray-500 hover:text-osrs-gold cursor-help transition-colors" />
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-[#1a1a1a] border border-osrs-border rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-xs text-gray-300 font-normal leading-relaxed normal-case tracking-normal text-shadow-none">
-                  Use Keys to unlock rewards from these tables.
+              <HelpCircle className="w-3.5 h-3.5 text-gray-500 hover:text-osrs-gold cursor-help transition-colors" />
+              <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-[#1a1a1a] border border-osrs-border rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-xs text-gray-300 font-normal leading-relaxed z-[60]">
+                  Unlock new content tables.
                   <br/><br/>
-                  <span className="text-blue-400 font-bold">Re-Rolls:</span> If you roll a duplicate item, the system automatically attempts one re-roll.
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#1a1a1a]"></div>
+                  <span className="text-osrs-gold font-bold">Strategy:</span> Unlocking early game areas and mobility can accelerate your account faster than gear!
               </div>
-          </div>
+           </div>
         </div>
         
         {keys > 0 ? (
-          <span className="text-[10px] font-bold text-green-400 animate-pulse uppercase tracking-wider bg-green-900/30 px-2 py-1 rounded border border-green-500/30 shadow-[0_0_10px_rgba(0,255,0,0.2)]">
-             Rewards Available
-          </span>
+            <div className="flex items-center gap-2 px-2 py-0.5 bg-osrs-gold/10 border border-osrs-gold/30 rounded-full animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-osrs-gold shadow-[0_0_5px_#fbbf24]"></span>
+                <span className="text-[10px] font-bold text-osrs-gold tracking-wide">AVAILABLE</span>
+            </div>
         ) : (
-          <span className="text-[10px] font-bold text-[#444] uppercase tracking-wider">
-            No Keys
-          </span>
+            <div className="text-[10px] font-mono text-gray-600">NO KEYS</div>
         )}
       </div>
-      
-      {/* Cards Grid Container */}
-      <div className={`p-6 flex-1 transition-all duration-500 ${keys > 0 ? 'bg-blue-500/5 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]' : ''}`}>
-        
-        {/* Blue Highlight Border for the Grid when keys exist */}
-        <div className={`
-           grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2 rounded-xl transition-all duration-300
-           ${keys > 0 ? 'ring-2 ring-blue-500/40 bg-blue-500/5' : ''}
-        `}>
-          <SpendCard 
+
+      {/* Cards Grid */}
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 custom-scrollbar content-start">
+         {/* Equipment */}
+         <SpendCard
             type={TableType.EQUIPMENT}
-            icon={Shield}
             label="Equipment"
             subLabel="Upgrade Gear"
-            description="11 Slots, 9 Tiers"
+            description={`${EQUIPMENT_SLOTS.length} Slots available`}
             disabled={!canUnlock.equipment}
             keysAvailable={keys > 0}
             complete={!canUnlock.equipment}
-            colorTheme="red"
+            iconSrc={OSRS_GACHA_ICONS.EQUIPMENT}
             onClick={() => onUnlock(TableType.EQUIPMENT)}
           />
-          <SpendCard 
+
+          {/* Skills */}
+          <SpendCard
             type={TableType.SKILLS}
-            icon={Hammer}
             label="Skills"
             subLabel="+10 Level Cap"
-            description="1 of 23 Skills"
+            description={`1 of ${SKILLS_LIST.length} Skills`}
             disabled={!canUnlock.skills}
             keysAvailable={keys > 0}
             complete={!canUnlock.skills}
-            colorTheme="blue"
+            iconSrc={OSRS_GACHA_ICONS.SKILLS}
             onClick={() => onUnlock(TableType.SKILLS)}
           />
-          <SpendCard 
+
+          {/* Regions */}
+          <SpendCard
             type={TableType.REGIONS}
-            icon={Map}
             label="Areas"
             subLabel="New Territory"
-            description="1 of 9 Regions"
+            description={`1 of ${REGIONS_LIST.length} Areas`}
             disabled={!canUnlock.regions}
             keysAvailable={keys > 0}
             complete={!canUnlock.regions}
-            colorTheme="green"
+            iconSrc={OSRS_GACHA_ICONS.REGIONS}
             onClick={() => onUnlock(TableType.REGIONS)}
           />
-          <SpendCard 
+
+          {/* Mobility */}
+          <SpendCard
             type={TableType.MOBILITY}
-            icon={Footprints}
             label="Mobility"
             subLabel="Travel Networks"
-            description="1 of 6 Types"
+            description={`1 of ${MOBILITY_LIST.length} Types`}
             disabled={!canUnlock.mobility}
             keysAvailable={keys > 0}
             complete={!canUnlock.mobility}
-            colorTheme="amber"
+            iconSrc={OSRS_GACHA_ICONS.MOBILITY}
             onClick={() => onUnlock(TableType.MOBILITY)}
           />
-          <SpendCard 
+
+          {/* Power */}
+          <SpendCard
             type={TableType.POWER}
-            icon={Zap}
             label="Power"
             subLabel="Magic & Prayer"
-            description="1 of 5 Upgrades"
+            description={`1 of ${POWER_LIST.length} Upgrades`}
             disabled={!canUnlock.power}
             keysAvailable={keys > 0}
             complete={!canUnlock.power}
-            colorTheme="violet"
+            iconSrc={OSRS_GACHA_ICONS.POWER}
             onClick={() => onUnlock(TableType.POWER)}
           />
-          <SpendCard 
-            type={TableType.CONTENT}
-            icon={Gamepad2}
-            label="Content"
-            subLabel="Minigames & Bosses"
-            description={`1 of ${CONTENT_LIST.length} Activities`}
-            disabled={!canUnlock.content}
+
+          {/* Minigames */}
+          <SpendCard
+            type={TableType.MINIGAMES}
+            label="Minigames"
+            subLabel="Activities & Fun"
+            description={`1 of ${MINIGAMES_LIST.length} Activities`}
+            disabled={!canUnlock.minigames}
             keysAvailable={keys > 0}
-            complete={!canUnlock.content}
-            colorTheme="cyan"
-            onClick={() => onUnlock(TableType.CONTENT)}
+            complete={!canUnlock.minigames}
+            iconSrc={OSRS_GACHA_ICONS.MINIGAMES}
+            onClick={() => onUnlock(TableType.MINIGAMES)}
           />
-        </div>
+
+          {/* Bosses */}
+          <SpendCard
+            type={TableType.BOSSES}
+            label="Bosses"
+            subLabel="Major Encounters"
+            description={`1 of ${BOSSES_LIST.length} Bosses`}
+            disabled={!canUnlock.bosses}
+            keysAvailable={keys > 0}
+            complete={!canUnlock.bosses}
+            iconSrc={OSRS_GACHA_ICONS.BOSSES}
+            onClick={() => onUnlock(TableType.BOSSES)}
+          />
       </div>
     </div>
   );
