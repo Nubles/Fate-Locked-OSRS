@@ -10,7 +10,7 @@ import { FateMechanics } from './components/FateMechanics';
 import { Key, BookOpen, Dices, Shield, Skull, Sparkles, Download, Upload, Save, RotateCcw } from 'lucide-react';
 
 // --- Utils ---
-const uuid = () => Math.random().toString(36).substr(2, 9);
+const uuid = () => Math.random().toString(36).substring(2, 11);
 const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
 const STORAGE_KEY = 'FATE_UIM_SAVE_V1';
