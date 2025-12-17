@@ -1,3 +1,19 @@
+/**
+ * ActionSection.tsx
+ *
+ * This component renders the "Farm Keys" panel.
+ * It contains buttons for every activity the player can do to earn keys.
+ *
+ * HOW IT WORKS:
+ * - Displays categories like Quests, Diaries, Slayer, etc.
+ * - Each button triggers the `onRoll` callback passed from App.tsx.
+ * - Uses standard OSRS color coding (Green=Easy, Red=Hard, etc.).
+ *
+ * HOW TO CHANGE:
+ * - To add a new button, simply add a `<RollButton>` or `<GridButton>` inside the appropriate category div.
+ * - To change colors, modify the `TIER_STYLES` object.
+ * - To change icons, update `OSRS_ICONS`.
+ */
 
 import React from 'react';
 import { DropSource } from '../types';
@@ -8,7 +24,7 @@ interface ActionSectionProps {
   onRoll: (source: string, chance: number) => void;
 }
 
-// OSRS Wiki Icon URLs
+// OSRS Wiki Icon URLs: Used for section headers and buttons.
 const OSRS_ICONS = {
   QUEST: 'https://oldschool.runescape.wiki/images/Quest_point_icon.png',
   DIARY: 'https://oldschool.runescape.wiki/images/Achievement_Diaries_icon.png',
@@ -29,6 +45,7 @@ const CLUE_ICONS = {
 };
 
 // Unified OSRS Difficulty Tier Styles
+// These mimic the color scheme used in OSRS interfaces (e.g. Diaries).
 const TIER_STYLES = {
   STONE: {
     bg: 'bg-[#2a2620]',
@@ -90,7 +107,7 @@ const TIER_STYLES = {
 
 type TierStyle = typeof TIER_STYLES.GREEN;
 
-// Helper to get tier style based on inputs (simplified logic)
+// Helper to get tier style based on text matching (simplified logic)
 const getTierStyle = (tier: string): TierStyle => {
   const t = tier.toLowerCase();
   if (t.includes('grandmaster')) return TIER_STYLES.GOLD;
@@ -103,7 +120,7 @@ const getTierStyle = (tier: string): TierStyle => {
   return TIER_STYLES.STONE;
 };
 
-// Reusable Component for Standard Roll Buttons
+// Reusable Component for Standard Roll Buttons (Full Width)
 const RollButton = ({ 
   label, 
   chance, 
@@ -145,7 +162,7 @@ const RollButton = ({
   </button>
 );
 
-// Reusable Component for Grid Buttons
+// Reusable Component for Grid Buttons (Small square-ish)
 const GridButton = ({ 
   tier, 
   chance, 
