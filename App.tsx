@@ -611,7 +611,7 @@ function App() {
     } else if (table === 'power') {
          setUnlocks(prev => ({ ...prev, power: [...prev.power, item] }));
          addLog({ type: 'UNLOCK', message: `Unlocked Power: ${item}`, details: 'Ancient secrets revealed...' });
-    } else if (table === 'minigame' || table === 'minigame') {
+    } else if (table === 'minigame' || table === 'minigames') {
          setUnlocks(prev => ({ ...prev, minigames: [...prev.minigames, item] }));
          addLog({ type: 'UNLOCK', message: `Unlocked Minigame: ${item}`, details: 'New activity available' });
     } else if (table === 'boss' || table === 'bosses') {
