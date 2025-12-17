@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/Fate-Locked-OSRS/',
+  base: '/Fate-Locked-OSRS/', // Base URL for GitHub Pages
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
