@@ -1,18 +1,3 @@
-/**
- * VoidReveal.tsx
- *
- * This component renders the cinematic "Item Unlocked" animation (The Black Hole).
- * It is a full-screen modal that plays a sequence of animations before showing the unlocked item.
- *
- * ANIMATION PHASES:
- * 1. Imploding/Singularity: A black hole forms and sucks in particles.
- * 2. Flash: A white flash transitions to the reveal.
- * 3. Reveal: The unlocked card floats up with God Rays.
- *
- * HOW TO CHANGE:
- * - Modify `getTheme` to change the colors for different item types.
- * - Adjust `useEffect` timeouts to change the duration of animation phases.
- */
 
 import React, { useEffect, useState } from 'react';
 import { Sparkles, Map, Box } from 'lucide-react';
@@ -20,11 +5,10 @@ import { Sparkles, Map, Box } from 'lucide-react';
 interface VoidRevealProps {
   itemName: string;
   itemType: string;
-  itemImage?: string; // Optional URL for the item image
-  onComplete: () => void; // Callback when the user clicks "Accept Destiny"
+  itemImage?: string;
+  onComplete: () => void;
 }
 
-// The internal state machine for the animation sequence
 type Phase = 'idle' | 'imploding' | 'singularity' | 'flash' | 'reveal';
 
 export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete }) => {
@@ -32,7 +16,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // Timeline of the animation sequence (in milliseconds)
+    // Timeline of the animation
     const timer1 = setTimeout(() => setPhase('singularity'), 1500); // Start shrinking
     const timer2 = setTimeout(() => setPhase('flash'), 2200);       // White flash
     const timer3 = setTimeout(() => setPhase('reveal'), 2400);      // Show item
@@ -44,8 +28,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
     };
   }, []);
 
-  // getTheme: Returns tailwind classes for coloring the animation based on item type.
-  // e.g., Equipment = Gold/Amber, Regions = Emerald, Bosses = Red.
+  // Determine color theme based on item type
   const getTheme = (type: string) => {
     const t = type.toLowerCase();
     if (t.includes('equipment') || t.includes('weapon') || t.includes('gear')) {

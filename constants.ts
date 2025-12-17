@@ -1,21 +1,8 @@
-/**
- * constants.ts
- *
- * This file contains all the static lists, configurations, and magic numbers used in the game.
- * It serves as the "database" for the application content.
- *
- * HOW TO CHANGE:
- * - To add a new skill, add it to `SKILLS_LIST`.
- * - To add a new boss, add it to `BOSSES_LIST`.
- * - To change the drop rate of keys from tasks, edit `DROP_RATES`.
- * - To change the images used for items, update `SPECIAL_ICONS` or `REGION_ICONS`.
- */
 
 import { DropSource } from './types';
 
-// SKILLS_LIST: The complete list of OSRS skills.
-// Used for the Skills unlock table.
-// Reordered to match the 3-column OSRS stats panel layout (roughly).
+// Reordered to match the 3-column OSRS stats panel layout
+// Col 1 (Combat), Col 2 (Support), Col 3 (Gathering/Artisan) roughly
 export const SKILLS_LIST = [
   'Attack', 'Hitpoints', 'Mining', 
   'Strength', 'Agility', 'Smithing', 
@@ -27,16 +14,12 @@ export const SKILLS_LIST = [
   'Construction', 'Hunter', 'Sailing'
 ];
 
-// EQUIPMENT_SLOTS: The equipment slots available to upgrade.
-// Used for the Equipment unlock table.
 export const EQUIPMENT_SLOTS = [
   'Head', 'Cape', 'Neck', 'Ammo', 'Weapon', 'Body', 'Shield', 'Legs', 'Gloves', 'Boots', 'Ring'
 ];
 
-// EQUIPMENT_TIER_MAX: The maximum tier level for equipment slots (0 to 9).
 export const EQUIPMENT_TIER_MAX = 9;
 
-// MOBILITY_LIST: Special travel methods unlockable in the Mobility table.
 export const MOBILITY_LIST = [
   'Spirit Trees', 
   'Fairy Rings', 
@@ -46,7 +29,6 @@ export const MOBILITY_LIST = [
   'Jewelry Teleports'
 ];
 
-// POWER_LIST: Special powers (spellbooks, prayers) unlockable in the Power table.
 export const POWER_LIST = [
   'Ancient Magicks', 
   'Lunar Spellbook', 
@@ -55,7 +37,6 @@ export const POWER_LIST = [
   'High Alchemy'
 ];
 
-// BOSSES_LIST: The pool of bosses available in the Bosses unlock table.
 export const BOSSES_LIST = [
   // Raids & Major Encounters
   'Chambers of Xeric',
@@ -133,7 +114,6 @@ export const BOSSES_LIST = [
   'TzHaar-Ket-Rak\'s Challenges',
 ];
 
-// MINIGAMES_LIST: The pool of minigames available in the Minigames unlock table.
 export const MINIGAMES_LIST = [
   // Legacy & Misc
   'Shooting Stars',
@@ -189,15 +169,11 @@ export const MINIGAMES_LIST = [
   'Tears of Guthix'
 ];
 
-// MISTHALIN_AREAS: Sub-areas of the starting region Misthalin.
-// These are purely visual/informative, as Misthalin is unlocked by default.
 export const MISTHALIN_AREAS = [
   'Varrock', 'Lumbridge', 'Draynor Village', 'Wizards\' Tower', 'Edgeville', 
   'Barbarian Village', 'Digsite', 'Silvarea', 'Paterdomus'
 ];
 
-// REGION_GROUPS: Defines the mapping of Region Names (RNG Pool) to their Sub-Areas (Visual display).
-// The keys (e.g., 'Asgarnia') are what gets unlocked. The values are the list of places inside.
 export const REGION_GROUPS: Record<string, string[]> = {
   'Asgarnia': [
     'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', 'Warriors\' Guild', 
@@ -258,11 +234,9 @@ export const REGION_GROUPS: Record<string, string[]> = {
   ]
 };
 
-// Flattened list for the RNG pool (this is what the Gacha picks from)
+// Flattened list for the RNG pool
 export const REGIONS_LIST = Object.values(REGION_GROUPS).flat();
 
-// DROP_RATES: The percentage chance (0-100) to find a Key from each activity.
-// Adjust these numbers to balance the game difficulty.
 export const DROP_RATES: Record<string, number> = {
   [DropSource.QUEST_NOVICE]: 20,
   [DropSource.QUEST_INTERMEDIATE]: 40,
@@ -290,9 +264,7 @@ export const DROP_RATES: Record<string, number> = {
 };
 
 // --- ICON & WIKI MAPPINGS ---
-// These control the visual assets used for each item.
 
-// REGION_ICONS: Maps Region Group Names to Wiki filenames.
 export const REGION_ICONS: Record<string, string> = {
   'Misthalin': 'Varrock_teleport.png',        // Varrock Teleport
   'Asgarnia': 'Falador_teleport.png',         // Falador Teleport
@@ -309,7 +281,6 @@ export const REGION_ICONS: Record<string, string> = {
   'The Open Seas': 'Sailing_icon.png'
 };
 
-// SLOT_CONFIG: Maps Equipment Slots to their background images and Grid Positions.
 export const SLOT_CONFIG: Record<string, { file: string, gridArea: string }> = {
   'Head':   { file: 'Head_slot.png', gridArea: 'col-start-2 row-start-1' },
   'Cape':   { file: 'Cape_slot.png', gridArea: 'col-start-1 row-start-2' },
@@ -324,8 +295,6 @@ export const SLOT_CONFIG: Record<string, { file: string, gridArea: string }> = {
   'Ring':   { file: 'Ring_slot.png', gridArea: 'col-start-3 row-start-5' },
 };
 
-// SPECIAL_ICONS: Maps specific item names (Bosses, Minigames, etc.) to Wiki filenames.
-// Add entries here if an item doesn't have an automatic icon or needs a specific one.
 export const SPECIAL_ICONS: Record<string, string> = {
   // Mobility
   'Spirit Trees': 'Spirit_tree_map_icon.png',
@@ -446,8 +415,6 @@ export const SPECIAL_ICONS: Record<string, string> = {
   'Tears of Guthix': 'Tears_of_Guthix.png'
 };
 
-// WIKI_OVERRIDES: Maps internal names to the exact OSRS Wiki page/filename if different.
-// Helps fix broken images or links.
 export const WIKI_OVERRIDES: Record<string, string> = {
   'Duel Arena / PvP Arena': 'PvP_Arena',
   'Miscellania & Etceteria': 'Miscellania',

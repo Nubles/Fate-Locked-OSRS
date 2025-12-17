@@ -1,17 +1,4 @@
-/**
- * types.ts
- *
- * This file contains all the TypeScript type definitions, interfaces, and enums used across the application.
- * It defines the shape of the data, the state of the game, and the categories for content.
- *
- * HOW TO CHANGE:
- * - If you add a new category of content (e.g., "Pets"), add it to the `TableType` enum and `UnlockState` interface.
- * - If you add a new way to earn keys (e.g., "Raids"), add it to the `DropSource` enum.
- * - If you need to store more information in the game state, update the `GameState` interface.
- */
 
-// DropSource: Defines the different activities that can trigger a key roll.
-// These string values are used for logging and tracking where rolls came from.
 export enum DropSource {
   QUEST_NOVICE = 'Quest (Novice)',
   QUEST_INTERMEDIATE = 'Quest (Intermediate)',
@@ -39,48 +26,42 @@ export enum DropSource {
   CLUE_MASTER = 'Clue Scroll (Master)',
 }
 
-// TableType: Defines the main categories of unlockable content.
-// These correspond to the "Gacha" tables in the UI.
 export enum TableType {
-  EQUIPMENT = 'Equipment', // Gear slots
-  SKILLS = 'Skills',       // Skills (Attack, Defence, etc.)
-  REGIONS = 'Regions',     // Map areas
-  MOBILITY = 'Mobility',   // Teleports and travel methods
-  POWER = 'Power',         // Spellbooks and Prayers
-  MINIGAMES = 'Minigames', // Activities
-  BOSSES = 'Bosses',       // Boss encounters
+  EQUIPMENT = 'Equipment',
+  SKILLS = 'Skills',
+  REGIONS = 'Regions',
+  MOBILITY = 'Mobility',
+  POWER = 'Power',
+  MINIGAMES = 'Minigames',
+  BOSSES = 'Bosses',
 }
 
-// LogEntry: Represents a single event in the history log (rolls, unlocks, etc.).
 export interface LogEntry {
-  id: string;             // Unique ID for the log entry
-  timestamp: number;      // When the event happened
-  type: 'ROLL' | 'UNLOCK' | 'PITY'; // The type of event
-  source?: string;        // Where the event originated (e.g., "Quest (Novice)")
-  result?: 'SUCCESS' | 'FAIL'; // Outcome of a roll
-  rollValue?: number;     // The actual number rolled (1-100)
-  threshold?: number;     // The target number needed for success
-  message: string;        // Main log message
-  details?: string;       // Extra details
+  id: string;
+  timestamp: number;
+  type: 'ROLL' | 'UNLOCK' | 'PITY';
+  source?: string;
+  result?: 'SUCCESS' | 'FAIL';
+  rollValue?: number;
+  threshold?: number;
+  message: string;
+  details?: string;
 }
 
-// UnlockState: The core data structure tracking what the player has unlocked.
 export interface UnlockState {
-  equipment: Record<string, number>; // Maps Equipment Slot Name -> Tier Level (0-9)
-  skills: Record<string, number>;    // Maps Skill Name -> Tier Level (1-10)
-  levels: Record<string, number>;    // Maps Skill Name -> Current In-Game Level (1-99)
-  regions: string[];                 // List of unlocked region names
-  mobility: string[];                // List of unlocked mobility methods
-  power: string[];                   // List of unlocked powers
-  minigames: string[];               // List of unlocked minigames
-  bosses: string[];                  // List of unlocked bosses
+  equipment: Record<string, number>; // Store Tier level (0-9)
+  skills: Record<string, number>; // Name -> Tier (1-10)
+  levels: Record<string, number>; // Name -> Current Level (1-99)
+  regions: string[];
+  mobility: string[];
+  power: string[];
+  minigames: string[];
+  bosses: string[];
 }
 
-// GameState: The entire persisted state of the application.
-// This is what gets saved to localStorage and exported to JSON.
 export interface GameState {
-  keys: number;           // Current number of standard keys
-  fatePoints: number;     // Current "bad luck protection" points (0-50)
-  unlocks: UnlockState;   // All player progress
-  history: LogEntry[];    // Log of past events
+  keys: number;
+  fatePoints: number;
+  unlocks: UnlockState;
+  history: LogEntry[];
 }

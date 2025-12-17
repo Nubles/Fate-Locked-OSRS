@@ -1,13 +1,3 @@
-/**
- * FateMechanics.tsx
- *
- * This component acts as the "How to Play" guide or Rulebook section of the app.
- * It is purely presentational (static text/icons) and does not handle game logic.
- *
- * HOW TO CHANGE:
- * - Update the text inside the JSX to change the rules description.
- * - Change the icons if you want to represent concepts differently.
- */
 
 import React from 'react';
 import { BookOpen, Dices, Sparkles, Shield, HelpCircle } from 'lucide-react';
