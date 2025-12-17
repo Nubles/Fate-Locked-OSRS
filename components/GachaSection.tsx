@@ -1,3 +1,18 @@
+/**
+ * GachaSection.tsx
+ *
+ * This component renders the "Spend Keys" panel (the Gacha Shop).
+ * It displays cards for each content type (Equipment, Skills, Regions, etc.) that can be unlocked.
+ *
+ * HOW IT WORKS:
+ * - Each card shows the cost (always 1 Key) and status (Available, Locked, or Completed).
+ * - Clicking a card calls the `onUnlock` callback in App.tsx.
+ *
+ * HOW TO CHANGE:
+ * - To add a new category card, add a `<SpendCard>` in the `GachaSection` return statement.
+ * - To change card styling, modify the `theme` object in `SpendCard`.
+ * - To change icons, update `OSRS_GACHA_ICONS`.
+ */
 
 import React from 'react';
 import { TableType } from '../types';
@@ -31,6 +46,7 @@ interface SpendCardProps {
   onClick: () => void;
 }
 
+// OSRS Wiki Icon URLs for Gacha Cards
 const OSRS_GACHA_ICONS = {
   EQUIPMENT: 'https://oldschool.runescape.wiki/images/Equipment_Stats.png',
   SKILLS: 'https://oldschool.runescape.wiki/images/Stats_icon.png',
@@ -54,6 +70,7 @@ const SpendCard: React.FC<SpendCardProps> = ({
 }) => {
   
   // Unified OSRS Theme (Gold/Brown)
+  // Designed to look like an item in an inventory or shop.
   const theme = {
       bg: 'bg-[#2a2620]',
       border: 'border-[#4a453d]',

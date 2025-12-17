@@ -1,3 +1,20 @@
+/**
+ * App.tsx
+ *
+ * This is the main component of the application. It acts as the "controller" for the game logic.
+ *
+ * RESPONSIBILITIES:
+ * 1. State Management: Holds the master state (Keys, Fate Points, Unlocks, History).
+ * 2. Persistence: Saves/Loads data to localStorage and handles import/export.
+ * 3. Game Logic: Contains the rules for Rolling (farming keys) and Gacha (spending keys).
+ * 4. Layout: Composes the main UI sections (Header, Action, Gacha, Dashboard).
+ *
+ * HOW TO CHANGE:
+ * - To change the initial state (new game), modify `getInitialUnlocks`.
+ * - To change the Pity System (Fate Points), modify `processRoll`.
+ * - To change the Gacha logic (dupe protection, etc.), modify `performGachaPull`.
+ * - To change how "Omni-Keys" work, modify `handleSpecialUnlock`.
+ */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { GameState, LogEntry, TableType, UnlockState } from './types';
@@ -11,18 +28,22 @@ import { VoidReveal } from './components/VoidReveal';
 import { Key, BookOpen, Dices, Shield, Skull, Sparkles, Download, Upload, Save, RotateCcw } from 'lucide-react';
 
 // --- Utils ---
+// Simple random ID generator for log entries
 const uuid = () => Math.random().toString(36).substr(2, 9);
+// Simple dice roller (1 to max)
 const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
+// The key used for localStorage
 const STORAGE_KEY = 'FATE_UIM_SAVE_V1';
 
-// Generator for fresh state to ensure no reference pollution
+// getInitialUnlocks: Generates a fresh, empty unlock state.
+// Used when starting a new game or resetting.
 const getInitialUnlocks = (): UnlockState => ({
   equipment: EQUIPMENT_SLOTS.reduce((acc, slot) => ({ ...acc, [slot]: 0 }), {} as Record<string, number>),
-  skills: { 'Hitpoints': 1 }, // Starts at Tier 1 (Cap 10)
+  skills: { 'Hitpoints': 1 }, // Hitpoints starts unlocked at Tier 1
   levels: SKILLS_LIST.reduce((acc, skill) => ({
     ...acc,
-    [skill]: skill === 'Hitpoints' ? 10 : 1
+    [skill]: skill === 'Hitpoints' ? 10 : 1 // Hitpoints starts at level 10, others at 1
   }), {} as Record<string, number>),
   regions: [],
   mobility: [],
@@ -31,7 +52,7 @@ const getInitialUnlocks = (): UnlockState => ({
   bosses: []
 });
 
-// Pending unlock state type
+// PendingUnlock: State for the "Unlocking..." animation modal.
 interface PendingUnlock {
   table: string; // The category (Skill, Equipment, Region, etc.)
   item: string; // The specific item name
@@ -40,7 +61,8 @@ interface PendingUnlock {
   itemImage?: string; // Image to display
 }
 
-// Fetch Main Image from OSRS Wiki API
+// fetchWikiImage: Async helper to get high-res images from OSRS Wiki API.
+// Used for Regions and Bosses where we don't have static local icons.
 const fetchWikiImage = async (pageName: string): Promise<string | null> => {
     try {
         const title = WIKI_OVERRIDES[pageName] || pageName;
@@ -69,7 +91,8 @@ const fetchWikiImage = async (pageName: string): Promise<string | null> => {
     }
 };
 
-// Helper to resolve OSRS Image URL (Sync version for known assets)
+// getUnlockImage: Synchronous helper to get local static icons.
+// Used for Skills, Equipment, and some icons before the API fetch completes.
 const getUnlockImage = (table: string, item: string) => {
     const baseUrl = 'https://oldschool.runescape.wiki/images/';
 
@@ -96,6 +119,8 @@ const getUnlockImage = (table: string, item: string) => {
 
 function App() {
   // --- Initialization Logic ---
+
+  // loadSaveData: Reads from localStorage on startup.
   const loadSaveData = (): Partial<GameState> & { specialKeys?: number } => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -110,12 +135,16 @@ function App() {
 
   const savedData = loadSaveData();
 
-  // Initialize keys to 3 if no save data exists
-  const [keys, setKeys] = useState<number>(savedData.keys ?? 3);
-  const [specialKeys, setSpecialKeys] = useState<number>(savedData.specialKeys ?? 0); // Omni-Keys
+  // --- Main State ---
+  // Keys: The main currency for unlocking content.
+  const [keys, setKeys] = useState<number>(savedData.keys ?? 3); // Start with 3 keys
+  // SpecialKeys (Omni-Keys): Rare currency that bypasses RNG.
+  const [specialKeys, setSpecialKeys] = useState<number>(savedData.specialKeys ?? 0);
+  // FatePoints: Accumulates on failed rolls. Reaching 50 grants a free key (Pity).
   const [fatePoints, setFatePoints] = useState<number>(savedData.fatePoints ?? 0);
   
-  // Merge saved unlocks with default structure and handle migration
+  // Unlocks: The massive object tracking everything the player has.
+  // We merge saved data with initial defaults to handle schema updates/migrations safely.
   const [unlocks, setUnlocks] = useState<UnlockState>(() => {
     const defaults = getInitialUnlocks();
     let initialUnlocks = {
@@ -126,7 +155,8 @@ function App() {
         levels: { ...defaults.levels, ...savedData.unlocks?.levels }
     };
 
-    // MIGRATION: content -> minigames/bosses
+    // MIGRATION: Old save data had 'content' array.
+    // We split this into 'minigames' and 'bosses' arrays in newer versions.
     if (savedData.unlocks && (savedData.unlocks as any).content) {
        const legacyContent = (savedData.unlocks as any).content as string[];
        const newMinigames = new Set([...initialUnlocks.minigames]);
@@ -141,20 +171,21 @@ function App() {
        });
        initialUnlocks.minigames = Array.from(newMinigames);
        initialUnlocks.bosses = Array.from(newBosses);
-       // We intentionally don't delete 'content' to avoid mutation issues, it just won't be used
     }
 
     return initialUnlocks;
   });
   
+  // History: Logs for the scrolling text box.
   const [history, setHistory] = useState<LogEntry[]>(savedData.history ?? []);
   
-  // Animation State
+  // Animation State: Controls the "VoidReveal" modal.
   const [pendingUnlock, setPendingUnlock] = useState<PendingUnlock | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- Persistence Hook ---
+  // Automatically saves to localStorage whenever state changes.
   useEffect(() => {
     try {
       const stateToSave = {
@@ -171,6 +202,8 @@ function App() {
   }, [keys, specialKeys, fatePoints, unlocks, history]);
 
   // --- Import/Export Handlers ---
+
+  // handleExport: Downloads the current state as a JSON file.
   const handleExport = () => {
     const stateToSave = { keys, specialKeys, fatePoints, unlocks, history };
     const blob = new Blob([JSON.stringify(stateToSave, null, 2)], { type: 'application/json' });
@@ -188,6 +221,7 @@ function App() {
     fileInputRef.current?.click();
   };
 
+  // handleFileChange: Reads an uploaded JSON file and replaces current state.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -246,6 +280,7 @@ function App() {
     reader.readAsText(file);
   };
 
+  // handleNewGame: Wipes everything and starts fresh.
   const handleNewGame = () => {
     if (window.confirm("Are you sure you want to start a new game?\n\nThis will ERASE current progress and reset to 3 Keys.\n(Export your save first if you want to keep it!)")) {
       // 1. Clear storage
@@ -264,24 +299,31 @@ function App() {
     }
   };
 
-  // Sound effects (placeholder)
+  // Sound effects (placeholder for future implementation)
   const playSound = (type: 'success' | 'fail' | 'unlock' | 'rare') => {
     // In a real app, we'd play audio here.
   };
 
+  // addLog: Helper to append to the history log.
   const addLog = useCallback((entry: Omit<LogEntry, 'id' | 'timestamp'>) => {
     setHistory(prev => [...prev, { ...entry, id: uuid(), timestamp: Date.now() }]);
   }, []);
 
   // --- Core Game Logic ---
 
+  /**
+   * processRoll: Determines if a user finds a key.
+   * @param source - Text description of where the roll came from (e.g., "Slayer Task")
+   * @param threshold - The % chance to succeed (0-100)
+   * @param isLevelUp - Boolean flag if this is a level-up roll
+   */
   const processRoll = useCallback((source: string, threshold: number, isLevelUp: boolean = false) => {
     const roll = rollDice(100);
     const success = roll <= threshold;
 
     if (success) {
-      // 1% Chance for an Omni-Key (Rare Drop)
-      const isRare = rollDice(100) === 100; // 1 in 100
+      // 1% Chance for an Omni-Key (Rare Drop) on successful rolls
+      const isRare = rollDice(100) === 100; // 1 in 100 chance
 
       if (isRare) {
         setSpecialKeys(prev => prev + 1);
@@ -308,16 +350,16 @@ function App() {
         });
         playSound('success');
       }
-      setFatePoints(0);
+      setFatePoints(0); // Reset pity on success
     } else {
       setFatePoints(prev => {
         const newFate = prev + 1;
-        const isPity = newFate >= 50;
+        const isPity = newFate >= 50; // Hard cap at 50 points
         
         // Pity Trigger
         if (isPity) {
           setKeys(k => k + 1);
-          // Log failure then pity
+          // Log failure then pity message
           addLog({
              type: 'ROLL',
              source,
@@ -331,7 +373,7 @@ function App() {
              details: '+1 Key Added'
           });
           playSound('success');
-          return 0; // Reset fate
+          return 0; // Reset fate after pity trigger
         }
 
         // Standard Failure
@@ -350,14 +392,18 @@ function App() {
 
   const handleRoll = (source: string, chance: number) => processRoll(source, chance);
 
+  /**
+   * handleSkillLevelUp: Logic for leveling up a skill.
+   * Validates if the level up is allowed (cap check) and triggers a roll.
+   */
   const handleSkillLevelUp = (skill: string) => {
     setUnlocks(prev => {
       const tier = prev.skills[skill] || 0;
       const currentLevel = prev.levels[skill] || 1;
       const cap = tier === 0 ? 1 : (tier === 10 ? 99 : tier * 10);
 
-      // Verify legitimate level up
-      if (tier === 0 && skill !== 'Hitpoints') return prev; // Should be impossible via UI
+      // Validation: Cannot level up past cap
+      if (tier === 0 && skill !== 'Hitpoints') return prev;
       if (currentLevel >= cap) return prev;
 
       const newLevel = currentLevel + 1;
@@ -378,7 +424,7 @@ function App() {
   };
 
   /**
-   * Handle Special Omni-Key Unlock
+   * handleSpecialUnlock: Logic for using an Omni-Key.
    * Directly unlocks a specific item, bypassing RNG.
    */
   const handleSpecialUnlock = async (type: string, name: string) => {
@@ -403,11 +449,12 @@ function App() {
   };
 
   /**
-   * Generic Gacha Pull Logic
+   * performGachaPull: The core RNG logic for spending keys.
+   * Picks a random item from the pool. If it's a duplicate, tries one more time (soft duplicate protection).
    */
   const performGachaPull = <T extends string>(
     pool: T[], 
-    validator: (item: T) => boolean
+    validator: (item: T) => boolean // Function to check if item is valid (not already maxed/unlocked)
   ): { success: boolean; item: T; msg: string } => {
     
     // Roll 1
@@ -426,19 +473,24 @@ function App() {
        details: 'Fate allows one re-roll.'
     });
 
-    // Roll 2
+    // Roll 2 (One retry)
     item = pool[Math.floor(Math.random() * pool.length)];
     if (validator(item)) {
       return { success: true, item, msg: '' };
     }
 
+    // Failed twice
     return { success: false, item, msg: `Re-roll: ${item} (Duplicate).` };
   };
 
+  /**
+   * handleUnlock: Orchestrates spending a key on a specific table (Skills, Regions, etc.)
+   */
   const handleUnlock = async (table: TableType) => {
     if (keys <= 0) return;
 
     // --- SKILLS LOGIC ---
+    // Skills unlock tiers (0 -> 1 -> ... -> 10)
     if (table === TableType.SKILLS) {
         const currentSkills = unlocks.skills;
         const totalTiers = (Object.values(currentSkills) as number[]).reduce((a, b) => a + b, 0);
@@ -452,7 +504,7 @@ function App() {
         });
 
         if (!result.success) {
-            setKeys(prev => prev - 1); // Fail still costs a key in typical gacha, or we can refund. Assuming spend.
+            setKeys(prev => prev - 1); // Fail still costs a key
             addLog({ type: 'ROLL', result: 'FAIL', message: result.msg, details: 'The key crumbles to dust.' });
             playSound('fail');
             return;
@@ -460,7 +512,7 @@ function App() {
 
         const skill = result.item;
         
-        // Defer Unlock
+        // Defer actual state update until Animation is done
         setPendingUnlock({
             table: 'skill',
             item: skill,
@@ -472,6 +524,7 @@ function App() {
     }
 
     // --- EQUIPMENT LOGIC ---
+    // Equipment unlocks tiers (0 -> 1 -> ... -> 9)
     if (table === TableType.EQUIPMENT) {
        const currentEquip = unlocks.equipment;
        const totalEquipTiers = (Object.values(currentEquip) as number[]).reduce((a, b) => a + b, 0);
@@ -502,7 +555,8 @@ function App() {
        return;
     }
 
-    // --- GENERIC LIST LOGIC ---
+    // --- GENERIC LIST LOGIC (Regions, Bosses, etc.) ---
+    // These are simple boolean unlocks (Have it or don't)
     let pool: string[] = [];
     let currentUnlocks: string[] = [];
     let stateKey: string = ''; // Just to identify mapping
@@ -539,6 +593,7 @@ function App() {
 
     if (currentUnlocks.length >= pool.length) return;
 
+    // Only valid if NOT already unlocked
     const result = performGachaPull(pool, (item) => !currentUnlocks.includes(item));
 
     if (!result.success) {
@@ -570,7 +625,8 @@ function App() {
   };
 
   /**
-   * Finalize the unlock after animation finishes
+   * finalizeUnlock: The callback that runs AFTER the "VoidReveal" animation finishes.
+   * This actually applies the state changes.
    */
   const finalizeUnlock = () => {
     if (!pendingUnlock) return;
@@ -633,6 +689,7 @@ function App() {
   const maxSkillTiers = SKILLS_LIST.length * 10;
   const maxEquipTiers = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
   
+  // Checks if there is anything left to unlock in each category
   const canUnlock = {
     equipment: totalEquipTiers < maxEquipTiers,
     skills: totalSkillTiers < maxSkillTiers,
@@ -646,7 +703,7 @@ function App() {
   return (
     <div className="min-h-screen bg-osrs-bg text-osrs-text pb-12 font-sans selection:bg-osrs-gold selection:text-black relative">
 
-      {/* Animation Overlay */}
+      {/* Animation Overlay (Conditional Render) */}
       {pendingUnlock && (
         <VoidReveal
             itemName={pendingUnlock.item}
@@ -656,7 +713,7 @@ function App() {
         />
       )}
 
-      {/* Header */}
+      {/* Header: Title, Save Controls, Currencies */}
       <header className="bg-osrs-panel border-b border-osrs-border sticky top-0 z-50 shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
@@ -751,7 +808,7 @@ function App() {
 
         {/* Top Section: Action & Spend */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* Left: Actions (Farm) */}
+          {/* Left: Actions (Farm Keys) */}
           <div className="space-y-6">
             <ActionSection onRoll={handleRoll} />
           </div>
@@ -763,7 +820,7 @@ function App() {
           </div>
         </div>
 
-        {/* Bottom Section: Visual Dashboard */}
+        {/* Bottom Section: Visual Dashboard (Progress & Interactive Unlocks) */}
         <Dashboard 
           unlocks={unlocks} 
           onSkillLevelUp={handleSkillLevelUp} 
