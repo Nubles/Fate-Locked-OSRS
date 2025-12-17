@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: [react()],
+  root: 'src',
+  publicDir: '../public',
   base: command === 'serve' ? '/' : '/Fate-Locked-OSRS/',
   resolve: {
     alias: {
@@ -18,7 +20,8 @@ export default defineConfig(({ command }) => ({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist',
+    emptyOutDir: true,
     assetsDir: 'assets',
   }
 }));
