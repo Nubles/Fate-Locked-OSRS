@@ -90,8 +90,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
   const maxEquipTiers = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
   
   const completionPercent = useMemo(() => {
-    const totalUnlocked = totalSkillTiers + (unlocks.regions.length + MISTHALIN_AREAS.length) + totalEquipTiers + unlocks.mobility.length + unlocks.power.length + unlocks.minigames.length + unlocks.bosses.length;
-    const totalAvailable = maxSkillTiers + (REGIONS_LIST.length + MISTHALIN_AREAS.length) + maxEquipTiers + MOBILITY_LIST.length + POWER_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length;
+    const totalUnlocked = totalSkillTiers + unlocks.regions.length + totalEquipTiers + unlocks.mobility.length + unlocks.power.length + unlocks.minigames.length + unlocks.bosses.length;
+    const totalAvailable = maxSkillTiers + REGIONS_LIST.length + maxEquipTiers + MOBILITY_LIST.length + POWER_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length;
     return Math.round((totalUnlocked / totalAvailable) * 100);
   }, [totalSkillTiers, totalEquipTiers, unlocks]);
 
@@ -115,16 +115,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                     const canSpecialUnlock = !isUnlocked && specialKeys > 0;
                     const wikiIcon = SPECIAL_ICONS[item] || 'Globe_icon.png';
                     
+                    if (isUnlocked) {
+                      return (
+                        <a
+                            key={item}
+                            href={getWikiUrl(item)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded border text-left transition-all bg-white/5 border-white/10 text-gray-200 shadow-inner hover:bg-white/10 group cursor-pointer"
+                        >
+                            <img
+                                src={`https://oldschool.runescape.wiki/images/${wikiIcon}`}
+                                alt={item}
+                                className="w-5 h-5 object-contain drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]"
+                                onError={(e) => { (e.target as HTMLImageElement).src = 'https://oldschool.runescape.wiki/images/Globe_icon.png' }}
+                            />
+                            <span className="text-[10px] font-medium truncate group-hover:underline decoration-white/30">{item}</span>
+                        </a>
+                      );
+                    }
+
                     return (
                         <button
                             key={item}
-                            disabled={isUnlocked || !canSpecialUnlock}
+                            disabled={!canSpecialUnlock}
                             onClick={() => onSpecialUnlock(type, item)}
                             className={`
                                 w-full flex items-center gap-2 px-2 py-1.5 rounded border text-left transition-all
-                                ${isUnlocked 
-                                    ? 'bg-white/5 border-white/10 text-gray-200 shadow-inner' 
-                                    : canSpecialUnlock 
+                                ${canSpecialUnlock
                                         ? 'bg-purple-500/10 border-purple-500/30 text-purple-200 hover:bg-purple-500/20 cursor-pointer shadow-[0_0_5px_rgba(168,85,247,0.1)]'
                                         : 'bg-transparent border-transparent text-gray-600 opacity-60 cursor-default'
                                 }
@@ -133,7 +151,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                             <img 
                                 src={`https://oldschool.runescape.wiki/images/${wikiIcon}`}
                                 alt={item}
-                                className={`w-5 h-5 object-contain ${isUnlocked ? 'drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]' : 'grayscale opacity-50'}`}
+                                className="w-5 h-5 object-contain grayscale opacity-50"
                                 onError={(e) => { (e.target as HTMLImageElement).src = 'https://oldschool.runescape.wiki/images/Globe_icon.png' }}
                             />
                             <span className="text-[10px] font-medium truncate">{item}</span>
@@ -159,7 +177,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
               <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-[#1a1a1a] border border-osrs-border rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-xs text-gray-300 font-normal leading-relaxed">
                   Track your unlocks here.
                   <br/><br/>
-                  <span className="text-green-400 font-bold">Leveling Up:</span> Click unlocked Skills to level them up. Each level grants a roll for a Key based on the new total level.
+                  <span className="text-green-400 font-bold">Leveling Up:</span> Click unlocked Skills to level them up. Each level grants a roll for a Key (Chance increases with level, max ~25%).
                   <div className="absolute left-2 top-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#1a1a1a]"></div>
               </div>
             </div>
@@ -280,9 +298,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
         <div className="flex flex-col h-[350px] lg:h-full min-h-0">
           <h3 className="text-emerald-400 font-bold mb-2 flex justify-between items-end text-sm">
             Areas
-            <span className="text-xs text-emerald-400/60">{unlocks.regions.length + MISTHALIN_AREAS.length}/{REGIONS_LIST.length + MISTHALIN_AREAS.length}</span>
+            <span className="text-xs text-emerald-400/60">{unlocks.regions.length}/{REGIONS_LIST.length}</span>
           </h3>
-          <ProgressBar current={unlocks.regions.length + MISTHALIN_AREAS.length} total={REGIONS_LIST.length + MISTHALIN_AREAS.length} colorClass="bg-emerald-500" />
+          <ProgressBar current={unlocks.regions.length} total={REGIONS_LIST.length} colorClass="bg-emerald-500" />
           
           <div className="mt-3 space-y-3 overflow-y-auto pr-2 flex-1 custom-scrollbar min-h-0">
             <div className="rounded border border-emerald-500/20 bg-black/20 overflow-hidden">
