@@ -156,14 +156,18 @@ function App() {
 
   // --- Persistence Hook ---
   useEffect(() => {
-    const stateToSave = {
-      keys,
-      specialKeys,
-      fatePoints,
-      unlocks,
-      history
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    try {
+      const stateToSave = {
+        keys,
+        specialKeys,
+        fatePoints,
+        unlocks,
+        history
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.error("Failed to save state to localStorage", e);
+    }
   }, [keys, specialKeys, fatePoints, unlocks, history]);
 
   // --- Import/Export Handlers ---
