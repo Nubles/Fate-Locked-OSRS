@@ -1,13 +1,26 @@
+/**
+ * LogViewer.tsx
+ *
+ * This component renders the scrolling "Fate Log" text box.
+ * It displays a history of all player actions (rolls, unlocks, pity triggers).
+ *
+ * FEATURES:
+ * - Auto-scrolls to the bottom on new entries.
+ * - Formats timestamps and log messages.
+ * - Color-codes success/fail outcomes.
+ */
+
 import React, { useRef, useEffect } from 'react';
 import { LogEntry } from '../types';
 
 interface LogViewerProps {
-  history: LogEntry[];
+  history: LogEntry[]; // The list of log entries to display
 }
 
 export const LogViewer: React.FC<LogViewerProps> = ({ history }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Effect: Auto-scroll to bottom whenever history changes
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTo({
