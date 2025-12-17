@@ -1,23 +1,3 @@
-/**
- * Dashboard.tsx
- *
- * This component renders the massive "Progression" panel at the bottom of the screen.
- * It visualizes all the player's unlocks: Skills, Regions, Equipment, etc.
- *
- * HOW IT WORKS:
- * - Skills: Shows current level and unlocked tier. Clickable to level up!
- * - Regions: Accordion list of areas. Shows unlocked/total count.
- * - Equipment: Visual inventory grid. Shows tier bars under each slot.
- * - Special: Lists for Mobility, Power, etc.
- *
- * INTERACTIVITY:
- * - Clicking a Skill triggers `onSkillLevelUp`.
- * - If you have an Omni-Key (`specialKeys > 0`), clicking ANY locked item triggers `onSpecialUnlock`.
- *
- * HOW TO CHANGE:
- * - To change the layout of the equipment grid, modify `SLOT_CONFIG` in constants.ts.
- * - To change how progress bars look, modify the `ProgressBar` component.
- */
 
 import React, { useState, useMemo } from 'react';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, MOBILITY_LIST, POWER_LIST, MINIGAMES_LIST, BOSSES_LIST, EQUIPMENT_TIER_MAX, REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, WIKI_OVERRIDES } from '../constants';
@@ -121,7 +101,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
     setExpandedGroup(expandedGroup === groupName ? null : groupName);
   };
 
-  // Helper to render lists like Mobility, Power, etc.
   const renderSpecialSection = (title: string, items: string[], unlockedItems: string[], type: 'mobility' | 'power' | 'minigames' | 'bosses', colorClass: string, icon: any) => {
      const Icon = icon;
      return (

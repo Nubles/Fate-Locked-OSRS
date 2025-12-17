@@ -1,14 +1,3 @@
-/**
- * ErrorBoundary.tsx
- *
- * A React Error Boundary component that catches JavaScript errors anywhere in the child component tree.
- * It logs those errors and displays a fallback UI instead of crashing the whole component tree.
- *
- * FEATURES:
- * - Catches uncaught errors.
- * - Displays a user-friendly error message.
- * - Provides a "Reset Data" button to clear localStorage if a bad save is causing the crash.
- */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -31,19 +20,16 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can also log the error to an error reporting service here
     console.error('Uncaught error:', error, errorInfo);
     this.setState({ errorInfo });
   }
 
-  // Emergency reset function: Clears storage and reloads.
-  // Useful if corrupted data in localStorage is preventing app startup.
   private handleReset = () => {
+    // Attempt to clear local storage if it's the culprit
     try {
         if (window.confirm("This will clear your local save data to try and fix the error. Continue?")) {
             localStorage.clear();
