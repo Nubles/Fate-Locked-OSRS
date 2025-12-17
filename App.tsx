@@ -16,8 +16,8 @@ const rollDice = (max: number = 100) => Math.floor(Math.random() * max) + 1;
 
 const STORAGE_KEY = 'FATE_UIM_SAVE_V1';
 
-// Default State Configuration
-const DEFAULT_UNLOCKS: UnlockState = {
+// Generator for fresh state to ensure no reference pollution
+const getInitialUnlocks = (): UnlockState => ({
   equipment: EQUIPMENT_SLOTS.reduce((acc, slot) => ({ ...acc, [slot]: 0 }), {} as Record<string, number>),
   skills: { 'Hitpoints': 1 }, // Starts at Tier 1 (Cap 10)
   levels: SKILLS_LIST.reduce((acc, skill) => ({
@@ -29,7 +29,7 @@ const DEFAULT_UNLOCKS: UnlockState = {
   power: [],
   minigames: [],
   bosses: []
-};
+});
 
 // Pending unlock state type
 interface PendingUnlock {
@@ -117,12 +117,13 @@ function App() {
   
   // Merge saved unlocks with default structure and handle migration
   const [unlocks, setUnlocks] = useState<UnlockState>(() => {
+    const defaults = getInitialUnlocks();
     let initialUnlocks = {
-        ...DEFAULT_UNLOCKS,
+        ...defaults,
         ...savedData.unlocks,
-        equipment: { ...DEFAULT_UNLOCKS.equipment, ...savedData.unlocks?.equipment },
-        skills: { ...DEFAULT_UNLOCKS.skills, ...savedData.unlocks?.skills },
-        levels: { ...DEFAULT_UNLOCKS.levels, ...savedData.unlocks?.levels }
+        equipment: { ...defaults.equipment, ...savedData.unlocks?.equipment },
+        skills: { ...defaults.skills, ...savedData.unlocks?.skills },
+        levels: { ...defaults.levels, ...savedData.unlocks?.levels }
     };
 
     // MIGRATION: content -> minigames/bosses
@@ -200,12 +201,13 @@ function App() {
               setFatePoints(json.fatePoints ?? 0);
 
               // Handle migration on import too
+              const defaults = getInitialUnlocks();
               let newUnlocks = {
-                  ...DEFAULT_UNLOCKS,
+                  ...defaults,
                   ...json.unlocks,
-                  equipment: { ...DEFAULT_UNLOCKS.equipment, ...json.unlocks?.equipment },
-                  skills: { ...DEFAULT_UNLOCKS.skills, ...json.unlocks?.skills },
-                  levels: { ...DEFAULT_UNLOCKS.levels, ...json.unlocks?.levels }
+                  equipment: { ...defaults.equipment, ...json.unlocks?.equipment },
+                  skills: { ...defaults.skills, ...json.unlocks?.skills },
+                  levels: { ...defaults.levels, ...json.unlocks?.levels }
               };
 
               if (json.unlocks && json.unlocks.content) {
@@ -242,14 +244,19 @@ function App() {
 
   const handleNewGame = () => {
     if (window.confirm("Are you sure you want to start a new game?\n\nThis will ERASE current progress and reset to 3 Keys.\n(Export your save first if you want to keep it!)")) {
+      // 1. Clear storage
       localStorage.removeItem(STORAGE_KEY);
+
+      // 2. Reset all state to defaults directly
+      // Note: We avoid window.location.reload() to provide a smoother experience and avoid potential race conditions with storage
       setKeys(3);
       setSpecialKeys(0);
       setFatePoints(0);
-      setUnlocks(DEFAULT_UNLOCKS);
+      setUnlocks(getInitialUnlocks());
       setHistory([]);
-      // Force reload to ensure clean state
-      window.location.reload();
+
+      // 3. Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -352,7 +359,9 @@ function App() {
       const newLevel = currentLevel + 1;
 
       // Trigger the roll for the NEW level
-      processRoll(`${skill} Level ${newLevel}`, newLevel, true);
+      // Adjusted formula: Level / 4 (Max ~25% at 99)
+      const rollChance = Math.ceil(newLevel / 4);
+      processRoll(`${skill} Level ${newLevel}`, rollChance, true);
 
       return {
         ...prev,
@@ -380,8 +389,8 @@ function App() {
       itemImage: getUnlockImage(type, name)
     });
 
-    // Try fetching better image for regions
-    if (type === 'region') {
+    // Try fetching better image for regions, bosses, minigames
+    if (type === 'region' || type === 'boss' || type === 'bosses' || type === 'minigame' || type === 'minigames') {
          const imageUrl = await fetchWikiImage(name);
          if (imageUrl) {
              setPendingUnlock(prev => (prev && prev.item === name ? { ...prev, itemImage: imageUrl } : prev));
@@ -546,8 +555,8 @@ function App() {
         itemImage: getUnlockImage(stateKey, item)
     });
 
-    // Attempt to fetch high-quality image from Wiki for Regions
-    if (table === TableType.REGIONS) {
+    // Attempt to fetch high-quality image from Wiki for Regions, Bosses, Minigames
+    if (table === TableType.REGIONS || table === TableType.BOSSES || table === TableType.MINIGAMES) {
          const imageUrl = await fetchWikiImage(item);
          if (imageUrl) {
              // Only update if the user hasn't closed it yet (check item name match)
@@ -602,7 +611,7 @@ function App() {
     } else if (table === 'power') {
          setUnlocks(prev => ({ ...prev, power: [...prev.power, item] }));
          addLog({ type: 'UNLOCK', message: `Unlocked Power: ${item}`, details: 'Ancient secrets revealed...' });
-    } else if (table === 'minigame' || table === 'minigames') {
+    } else if (table === 'minigame' || table === 'minigame') {
          setUnlocks(prev => ({ ...prev, minigames: [...prev.minigames, item] }));
          addLog({ type: 'UNLOCK', message: `Unlocked Minigame: ${item}`, details: 'New activity available' });
     } else if (table === 'boss' || table === 'bosses') {

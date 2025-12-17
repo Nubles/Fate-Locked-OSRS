@@ -293,9 +293,9 @@ export const ActionSection: React.FC<ActionSectionProps> = ({ onRoll }) => {
               <GridButton tier="Easy" chance="5%" icon={Swords} onClick={() => onRoll(DropSource.CA_EASY, DROP_RATES[DropSource.CA_EASY])} />
               <GridButton tier="Medium" chance="10%" icon={Swords} onClick={() => onRoll(DropSource.CA_MEDIUM, DROP_RATES[DropSource.CA_MEDIUM])} />
               <GridButton tier="Hard" chance="20%" icon={Swords} onClick={() => onRoll(DropSource.CA_HARD, DROP_RATES[DropSource.CA_HARD])} />
-              <GridButton tier="Elite" chance="50%" icon={Swords} onClick={() => onRoll(DropSource.CA_ELITE, DROP_RATES[DropSource.CA_ELITE])} />
-              <GridButton tier="Master" chance="50%" icon={Swords} onClick={() => onRoll(DropSource.CA_MASTER, DROP_RATES[DropSource.CA_MASTER])} />
-              <GridButton tier="G.Master" chance="50%" icon={Swords} onClick={() => onRoll(DropSource.CA_GRANDMASTER, DROP_RATES[DropSource.CA_GRANDMASTER])} />
+              <GridButton tier="Elite" chance="40%" icon={Swords} onClick={() => onRoll(DropSource.CA_ELITE, DROP_RATES[DropSource.CA_ELITE])} />
+              <GridButton tier="Master" chance="60%" icon={Swords} onClick={() => onRoll(DropSource.CA_MASTER, DROP_RATES[DropSource.CA_MASTER])} />
+              <GridButton tier="G.Master" chance="80%" icon={Swords} onClick={() => onRoll(DropSource.CA_GRANDMASTER, DROP_RATES[DropSource.CA_GRANDMASTER])} />
             </div>
           </div>
 
