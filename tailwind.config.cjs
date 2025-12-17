@@ -8,15 +8,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'osrs-bg': '#1d1d1d',
-        'osrs-panel': '#2d2d2d',
-        'osrs-border': '#3d3d3d',
-        'osrs-text': '#d1d5db',
-        'osrs-gold': '#ffb81c',
-        'osrs-red': '#ef4444',
-        'osrs-pity': '#eab308',
-        'osrs-success': '#22c55e',
-        'osrs-fail': '#ef4444',
+        osrs: {
+          bg: '#161616',
+          panel: '#2d2d2d',
+          border: '#3e3e3e',
+          gold: '#fbbf24',
+          text: '#d1d5db',
+          accent: '#8b5cf6',
+          success: '#22c55e',
+          fail: '#ef4444',
+          pity: '#f59e0b'
+        }
       },
     },
   },

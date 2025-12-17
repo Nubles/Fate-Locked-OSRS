@@ -1,34 +1,23 @@
 
 import React, { useState, useMemo } from 'react';
-import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, MOBILITY_LIST, POWER_LIST, CONTENT_LIST, EQUIPMENT_TIER_MAX } from '../constants';
-import { ChevronRight, ChevronDown, Lock, Sparkles, Footprints, Zap, Gamepad2, HelpCircle } from 'lucide-react';
+import { EQUIPMENT_SLOTS, SKILLS_LIST, REGIONS_LIST, REGION_GROUPS, MISTHALIN_AREAS, MOBILITY_LIST, POWER_LIST, MINIGAMES_LIST, BOSSES_LIST, EQUIPMENT_TIER_MAX, REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, WIKI_OVERRIDES } from '../constants';
+import { ChevronRight, ChevronDown, Lock, Sparkles, Footprints, Zap, Gamepad2, HelpCircle, Skull } from 'lucide-react';
 
 interface DashboardProps {
   unlocks: {
-    equipment: Record<string, number>; // Changed to Record
+    equipment: Record<string, number>;
     skills: Record<string, number>;
     levels: Record<string, number>;
     regions: string[];
     mobility: string[];
     power: string[];
-    content: string[];
+    minigames: string[];
+    bosses: string[];
   };
   onSkillLevelUp: (skill: string) => void;
   specialKeys: number;
-  onSpecialUnlock: (type: 'skill' | 'equipment' | 'region' | 'mobility' | 'power' | 'content', name: string) => void;
+  onSpecialUnlock: (type: 'skill' | 'equipment' | 'region' | 'mobility' | 'power' | 'minigames' | 'bosses', name: string) => void;
 }
-
-// Wiki URL Overrides for areas that don't match simple formatting
-const WIKI_OVERRIDES: Record<string, string> = {
-  'Duel Arena / PvP Arena': 'PvP_Arena',
-  'Miscellania & Etceteria': 'Miscellania',
-  'Isle of Souls (Expanded)': 'Isle_of_Souls',
-  'Mort\'ton': 'Mort\'ton',
-  'Shades of Mort\'ton': 'Shades_of_Mort\'ton',
-  'Civitas illa Fortis': 'Civitas_illa_Fortis',
-  'Hunter\'s Guild': 'Hunter_Guild',
-  'Mor Ul Rek (TzHaar City)': 'Mor_Ul_Rek',
-};
 
 // Helper to generate Wiki URLs
 const getWikiUrl = (name: string) => {
@@ -55,23 +44,6 @@ const getSkillIcon = (skillName: string, isUnlocked: boolean) => {
   );
 };
 
-// Region Icons Mapping - Using reliable filenames (Teleport Spells or Diary Items)
-const REGION_ICONS: Record<string, string> = {
-  'Misthalin': 'Varrock_teleport.png',        // Varrock Teleport
-  'Asgarnia': 'Falador_teleport.png',         // Falador Teleport
-  'Kandarin': 'Camelot_teleport.png',         // Camelot Teleport
-  'Karamja': 'Karamja_gloves_1.png',          // Karamja Gloves
-  'Kharidian Desert': 'Desert_amulet_1.png',  // Desert Amulet
-  'Morytania': 'Ectophial.png',               // Ectophial
-  'Fremennik': 'Fremennik_sea_boots_1.png',   // Sea Boots
-  'Tirannwn': 'Crystal_teleport_seed.png',    // Crystal Teleport Seed
-  'Wilderness': 'Wilderness_sword_1.png',     // Wilderness Sword
-  'Kourend & Kebos': 'Xeric\'s_talisman.png', // Xeric's Talisman
-  'Varlamore': 'Civitas_illa_Fortis_teleport.png', 
-  'Islands & Others': 'Fossil_Island_Teleport.png',
-  'The Open Seas': 'Sailing_icon.png'
-};
-
 const getRegionIcon = (regionName: string, isUnlocked: boolean) => {
   const filename = REGION_ICONS[regionName];
   if (!filename) return null;
@@ -90,87 +62,6 @@ const getRegionIcon = (regionName: string, isUnlocked: boolean) => {
       }}
     />
   );
-};
-
-// Map internal slot names to Wiki filenames and Grid positions
-const SLOT_CONFIG: Record<string, { file: string, gridArea: string }> = {
-  'Head':   { file: 'Head_slot.png', gridArea: 'col-start-2 row-start-1' },
-  'Cape':   { file: 'Cape_slot.png', gridArea: 'col-start-1 row-start-2' },
-  'Neck':   { file: 'Neck_slot.png', gridArea: 'col-start-2 row-start-2' },
-  'Ammo':   { file: 'Ammo_slot.png', gridArea: 'col-start-3 row-start-2' },
-  'Weapon': { file: 'Weapon_slot.png', gridArea: 'col-start-1 row-start-3' },
-  'Body':   { file: 'Body_slot.png', gridArea: 'col-start-2 row-start-3' },
-  'Shield': { file: 'Shield_slot.png', gridArea: 'col-start-3 row-start-3' },
-  'Legs':   { file: 'Legs_slot.png', gridArea: 'col-start-2 row-start-4' },
-  'Gloves': { file: 'Hands_slot.png', gridArea: 'col-start-1 row-start-5' },
-  'Boots':  { file: 'Feet_slot.png', gridArea: 'col-start-2 row-start-5' },
-  'Ring':   { file: 'Ring_slot.png', gridArea: 'col-start-3 row-start-5' },
-};
-
-// Special Unlock Icons
-const SPECIAL_ICONS: Record<string, string> = {
-  // Mobility
-  'Spirit Trees': 'Spirit_tree_map_icon.png',
-  'Fairy Rings': 'Fairy_ring_map_icon.png',
-  'Gnome Gliders': 'Gnome_glider_map_icon.png',
-  'Charter Ships': 'Charter_Crew_member_icon.png',
-  'Teleport Tablets': 'Teleport_to_house.png',
-  'Jewelry Teleports': 'Games_necklace(8).png',
-  // Power
-  'Ancient Magicks': 'Ancient_Magicks_icon.png',
-  'Lunar Spellbook': 'Lunar_spells_icon.png',
-  'Arceuus Spellbook': 'Arceuus_spells_icon.png',
-  'Protection Prayers': 'Protect_from_Melee_icon.png',
-  'High Alchemy': 'High_Level_Alchemy_icon.png',
-  // Content (Legacy & Expanded)
-  'Wintertodt': 'Wintertodt_icon.png',
-  'Tempoross': 'Tempoross_icon.png',
-  'Shooting Stars': 'Celestial_ring.png',
-  'Barbarian Assault': 'Fighter_torso.png',
-  'Bounty Hunter': 'Bounty_hunter_emblem_tier_1.png',
-  'Castle Wars': 'Saradomin_standard.png',
-  'Clan Wars': 'Clan_Wars_cape_(purple).png',
-  'Emir\'s Arena': 'Duel_Arena_teleport.png',
-  'Fortis Colosseum': 'Dizana\'s_quiver.png',
-  'Inferno': 'Infernal_cape.png',
-  'Last Man Standing': 'Victor\'s_cape_(1000).png',
-  'Mage Arena': 'God_cape.png',
-  'Nightmare Zone': 'Black_mask_(i).png',
-  'Pest Control': 'Void_knight_helm.png',
-  'Soul Wars': 'Soul_wars_portal.png',
-  'Temple Trekking': 'Gadderhammer.png',
-  'TzHaar Fight Cave': 'Fire_cape.png',
-  'TzHaar Fight Pit': 'Toktz-ket-xil.png',
-  'TzHaar-Ket-Rak\'s Challenges': 'Tokkul.png',
-  'Archery Competition': 'Bronze_arrow.png',
-  'Blast Furnace': 'Blast_furnace_icon.png',
-  'Brimhaven Agility Arena': 'Agility_arena_ticket.png',
-  'Fishing Trawler': 'Angler_hat.png',
-  'Giants\' Foundry': 'Kovac.png',
-  'Gnome Ball': 'Gnomeball.png',
-  'Gnome Restaurant': 'Mint_cocktail.png',
-  'Guardians of the Rift': 'Abyssal_pearl.png',
-  'Hallowed Sepulchre': 'Hallowed_ring.png',
-  'Impetuous Impulses': 'Eclectic_impling_jar.png',
-  'Mage Training Arena': 'Teacher_wand.png',
-  'Mahogany Homes': 'Carpenter\'s_helmet.png',
-  'Mastering Mixology': 'Mojo_icon.png',
-  'Mess': 'Fried_mushrooms.png',
-  'Pyramid Plunder': 'Pharaoh\'s_sceptre.png',
-  'Rogues\' Den': 'Rogue_kit.png',
-  'Sorceress\'s Garden': 'Summer_sq\'irkjuice.png',
-  'Stealing Artefacts': 'Golden_goblet.png',
-  'Tithe Farm': 'Farmer_Gricoller\'s_can.png',
-  'Trouble Brewing': 'Rum_(blue).png',
-  'Volcanic Mine': 'Volcanic_Mine_teleport.png',
-  'Shades of Mort\'ton': 'Flamtaer_hammer.png',
-  'Tai Bwo Wannai Cleanup': 'Trading_sticks.png',
-  'The Gauntlet': 'Crystal_helm.png',
-  'Warriors\' Guild': 'Dragon_defender.png',
-  'Burthorpe Games Room': 'RuneLink_table.png',
-  'Forestry': 'Forestry_kit.png',
-  'Rat Pits': 'Rat_pole.png',
-  'Tears of Guthix': 'Tears_of_Guthix.png'
 };
 
 const ProgressBar = ({ current, total, colorClass }: { current: number; total: number; colorClass: string }) => {
@@ -199,8 +90,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
   const maxEquipTiers = EQUIPMENT_SLOTS.length * EQUIPMENT_TIER_MAX;
   
   const completionPercent = useMemo(() => {
-    const totalUnlocked = totalSkillTiers + unlocks.regions.length + totalEquipTiers + unlocks.mobility.length + unlocks.power.length + unlocks.content.length;
-    const totalAvailable = maxSkillTiers + REGIONS_LIST.length + maxEquipTiers + MOBILITY_LIST.length + POWER_LIST.length + CONTENT_LIST.length;
+    const totalUnlocked = totalSkillTiers + (unlocks.regions.length + MISTHALIN_AREAS.length) + totalEquipTiers + unlocks.mobility.length + unlocks.power.length + unlocks.minigames.length + unlocks.bosses.length;
+    const totalAvailable = maxSkillTiers + (REGIONS_LIST.length + MISTHALIN_AREAS.length) + maxEquipTiers + MOBILITY_LIST.length + POWER_LIST.length + MINIGAMES_LIST.length + BOSSES_LIST.length;
     return Math.round((totalUnlocked / totalAvailable) * 100);
   }, [totalSkillTiers, totalEquipTiers, unlocks]);
 
@@ -210,7 +101,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
     setExpandedGroup(expandedGroup === groupName ? null : groupName);
   };
 
-  const renderSpecialSection = (title: string, items: string[], unlockedItems: string[], type: 'mobility' | 'power' | 'content', colorClass: string, icon: any) => {
+  const renderSpecialSection = (title: string, items: string[], unlockedItems: string[], type: 'mobility' | 'power' | 'minigames' | 'bosses', colorClass: string, icon: any) => {
      const Icon = icon;
      return (
         <div className="bg-black/20 rounded-lg border border-white/5 p-3 flex-1 min-w-[200px]">
@@ -242,7 +133,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                             <img 
                                 src={`https://oldschool.runescape.wiki/images/${wikiIcon}`}
                                 alt={item}
-                                className={`w-4 h-4 object-contain ${isUnlocked ? 'drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]' : 'grayscale opacity-50'}`}
+                                className={`w-5 h-5 object-contain ${isUnlocked ? 'drop-shadow-[0_0_2px_rgba(255,255,255,0.3)]' : 'grayscale opacity-50'}`}
                                 onError={(e) => { (e.target as HTMLImageElement).src = 'https://oldschool.runescape.wiki/images/Globe_icon.png' }}
                             />
                             <span className="text-[10px] font-medium truncate">{item}</span>
@@ -304,14 +195,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                   const cap = tier === 0 ? 1 : (tier === 10 ? 99 : tier * 10);
                   const canLevelUp = isUnlocked && currentLevel < cap;
                   
-                  // Special Unlock Logic
                   const canSpecialUnlock = !isUnlocked && specialKeys > 0;
                   const isInteractive = canLevelUp || canSpecialUnlock;
 
-                  // Color logic
-                  let levelColor = '#4a4a4a'; // locked
+                  let levelColor = '#4a4a4a';
                   if (tier > 0) levelColor = '#e0e0e0';
-                  if (canLevelUp) levelColor = '#4ade80'; // bright green if upgrade available
+                  if (canLevelUp) levelColor = '#4ade80';
 
                   const displayLabel = isUnlocked ? `${currentLevel}/${cap}` : 'Locked';
 
@@ -354,17 +243,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                             {displayLabel}
                          </span>
                          
-                         {/* Segmented Tier Bar */}
                          <div className="flex w-full gap-[1px] mt-1 h-1.5">
                             {Array.from({length: 10}).map((_, i) => {
                                 const t = i + 1;
                                 const unlockedTier = tier >= t;
                                 const isMaxTier = t === 10;
-                                
-                                // Color selection
                                 let bgClass = 'bg-[#1a1a1a]';
                                 let shadowClass = '';
-                                
                                 if (unlockedTier) {
                                     if (isMaxTier) {
                                         bgClass = 'bg-osrs-gold';
@@ -374,7 +259,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                                         shadowClass = 'shadow-[0_0_2px_rgba(59,130,246,0.6)]';
                                     }
                                 }
-                                
                                 return (
                                     <div 
                                         key={i} 
@@ -396,12 +280,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
         <div className="flex flex-col h-[350px] lg:h-full min-h-0">
           <h3 className="text-emerald-400 font-bold mb-2 flex justify-between items-end text-sm">
             Areas
-            <span className="text-xs text-emerald-400/60">{unlocks.regions.length}/{REGIONS_LIST.length}</span>
+            <span className="text-xs text-emerald-400/60">{unlocks.regions.length + MISTHALIN_AREAS.length}/{REGIONS_LIST.length + MISTHALIN_AREAS.length}</span>
           </h3>
-          <ProgressBar current={unlocks.regions.length} total={REGIONS_LIST.length} colorClass="bg-emerald-500" />
+          <ProgressBar current={unlocks.regions.length + MISTHALIN_AREAS.length} total={REGIONS_LIST.length + MISTHALIN_AREAS.length} colorClass="bg-emerald-500" />
           
           <div className="mt-3 space-y-3 overflow-y-auto pr-2 flex-1 custom-scrollbar min-h-0">
-            {/* Misthalin Special Card (Unlocked Default) */}
             <div className="rounded border border-emerald-500/20 bg-black/20 overflow-hidden">
                 <div className="px-2 py-1.5 flex justify-between items-center border-b border-emerald-500/10 bg-emerald-900/10">
                     <div className="flex items-center gap-2">
@@ -415,7 +298,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                     <span className="text-[9px] font-mono text-emerald-300/60">Unlocked</span>
                 </div>
                 
-                {/* List of Misthalin Areas - Now with Wiki Links */}
                 <div className="p-1.5 grid grid-cols-2 gap-1 bg-black/10">
                    {MISTHALIN_AREAS.map(area => (
                        <a 
@@ -511,7 +393,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
           <div className="mt-3 flex-1 flex items-center justify-center min-h-0">
             <div className="bg-[#2e2b26] rounded border border-[#1e1d1a] shadow-inner p-4 lg:p-8 relative overflow-hidden shrink-0">
                 <div className="relative">
-                    {/* Connecting Bars Layer */}
                     <div className="absolute inset-0 pointer-events-none z-0 opacity-60">
                         <div className="absolute left-[50%] top-2 bottom-2 w-1.5 -ml-[3px] bg-[#221f1a] shadow-[inset_1px_0_1px_rgba(255,255,255,0.05)] border-l border-[#3a352e]"></div>
                         <div className="absolute top-[23%] left-[10%] right-[10%] h-1.5 bg-[#221f1a] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] border-t border-[#3a352e]"></div>
@@ -520,7 +401,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                         <div className="absolute right-[16.66%] top-[50%] bottom-[10%] w-1.5 -mr-[3px] bg-[#221f1a] shadow-[inset_1px_0_1px_rgba(255,255,255,0.05)] border-l border-[#3a352e]"></div>
                     </div>
 
-                    {/* Slots Grid */}
                     <div className="grid grid-cols-3 grid-rows-5 gap-3 lg:gap-4 w-max relative z-10">
                     {EQUIPMENT_SLOTS.map(slot => {
                         const tier = unlocks.equipment[slot] || 0;
@@ -556,7 +436,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                             `}
                             />
                             
-                            {/* Tier Indicator - Bar style matching skills */}
                             <div className="absolute bottom-1 left-1 right-1 lg:bottom-1.5 flex gap-[1px] h-1 lg:h-1.5">
                                 {Array.from({ length: EQUIPMENT_TIER_MAX }).map((_, i) => (
                                     <div 
@@ -569,12 +448,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
                                 ))}
                             </div>
 
-                            {/* Special Unlock Pulse */}
                             {canSpecialUnlock && (
                             <div className="absolute inset-0 bg-purple-500/20 animate-pulse pointer-events-none"></div>
                             )}
 
-                            {/* Unlocked Highlight */}
                             {isUnlocked && (
                             <div className="absolute inset-0 rounded border border-yellow-400/20 shadow-[inset_0_0_8px_rgba(255,215,0,0.1)] pointer-events-none"></div>
                             )}
@@ -588,11 +465,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ unlocks, onSkillLevelUp, s
         </div>
       </div>
 
-      {/* Special Unlocks Row (Mobility, Power, Content) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/5 pt-6">
+      {/* Special Unlocks Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/5 pt-6">
          {renderSpecialSection('Mobility', MOBILITY_LIST, unlocks.mobility, 'mobility', 'text-amber-400', Footprints)}
          {renderSpecialSection('Power', POWER_LIST, unlocks.power, 'power', 'text-violet-400', Zap)}
-         {renderSpecialSection('Content', CONTENT_LIST, unlocks.content, 'content', 'text-cyan-400', Gamepad2)}
+         {renderSpecialSection('Minigames', MINIGAMES_LIST, unlocks.minigames, 'minigames', 'text-cyan-400', Gamepad2)}
+         {renderSpecialSection('Bosses', BOSSES_LIST, unlocks.bosses, 'bosses', 'text-fuchsia-400', Skull)}
       </div>
     </div>
   );

@@ -32,7 +32,8 @@ export enum TableType {
   REGIONS = 'Regions',
   MOBILITY = 'Mobility',
   POWER = 'Power',
-  CONTENT = 'Content',
+  MINIGAMES = 'Minigames',
+  BOSSES = 'Bosses',
 }
 
 export interface LogEntry {
@@ -48,13 +49,14 @@ export interface LogEntry {
 }
 
 export interface UnlockState {
-  equipment: Record<string, number>; // Changed to store Tier level (0-9)
+  equipment: Record<string, number>; // Store Tier level (0-9)
   skills: Record<string, number>; // Name -> Tier (1-10)
   levels: Record<string, number>; // Name -> Current Level (1-99)
   regions: string[];
   mobility: string[];
   power: string[];
-  content: string[];
+  minigames: string[];
+  bosses: string[];
 }
 
 export interface GameState {
