@@ -11,19 +11,19 @@
  * - To change the images used for items, update `SPECIAL_ICONS` or `REGION_ICONS`.
  */
 
-import { DropSource } from './types';
+import { DropSource } from '../types';
 
 // SKILLS_LIST: The complete list of OSRS skills.
 // Used for the Skills unlock table.
 // Reordered to match the 3-column OSRS stats panel layout (roughly).
 export const SKILLS_LIST = [
-  'Attack', 'Hitpoints', 'Mining', 
-  'Strength', 'Agility', 'Smithing', 
-  'Defence', 'Herblore', 'Fishing', 
-  'Ranged', 'Thieving', 'Cooking', 
-  'Prayer', 'Crafting', 'Firemaking', 
-  'Magic', 'Fletching', 'Woodcutting', 
-  'Runecraft', 'Slayer', 'Farming', 
+  'Attack', 'Hitpoints', 'Mining',
+  'Strength', 'Agility', 'Smithing',
+  'Defence', 'Herblore', 'Fishing',
+  'Ranged', 'Thieving', 'Cooking',
+  'Prayer', 'Crafting', 'Firemaking',
+  'Magic', 'Fletching', 'Woodcutting',
+  'Runecraft', 'Slayer', 'Farming',
   'Construction', 'Hunter', 'Sailing'
 ];
 
@@ -47,10 +47,10 @@ export const MOBILITY_LIST = [
 
 // POWER_LIST: Special powers (spellbooks, prayers) unlockable in the Power table.
 export const POWER_LIST = [
-  'Ancient Magicks', 
-  'Lunar Spellbook', 
-  'Arceuus Spellbook', 
-  'Protection Prayers', 
+  'Ancient Magicks',
+  'Lunar Spellbook',
+  'Arceuus Spellbook',
+  'Protection Prayers',
   'High Alchemy'
 ];
 
@@ -155,66 +155,66 @@ export const MINIGAMES_LIST = [
 ];
 
 export const MISTHALIN_AREAS = [
-  'Varrock', 'Lumbridge', 'Draynor Village', 'Wizards\' Tower', 'Edgeville', 
+  'Varrock', 'Lumbridge', 'Draynor Village', 'Wizards\' Tower', 'Edgeville',
   'Barbarian Village', 'Digsite', 'Silvarea', 'Paterdomus'
 ];
 
 export const REGION_GROUPS: Record<string, string[]> = {
   'Asgarnia': [
-    'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', 'Warriors\' Guild', 
-    'Heroes\' Guild', 'Crafting Guild', 'Dwarven Mine', 'Ice Mountain', 'Asgarnian Ice Dungeon', 
+    'Falador', 'Port Sarim', 'Rimmington', 'Taverley', 'Burthorpe', 'Warriors\' Guild',
+    'Heroes\' Guild', 'Crafting Guild', 'Dwarven Mine', 'Ice Mountain', 'Asgarnian Ice Dungeon',
     'Motherlode Mine', 'Goblin Village', 'Mudskipper Point', 'Void Knights\' Outpost', 'Entrana'
   ],
   'Kandarin': [
-    'East Ardougne', 'West Ardougne', 'Catherby', 'Seers\' Village', 'Camelot', 'Yanille', 
-    'Port Khazard', 'Hemenster', 'Fishing Guild', 'Ranging Guild', 'Legends\' Guild', 
-    'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony', 
+    'East Ardougne', 'West Ardougne', 'Catherby', 'Seers\' Village', 'Camelot', 'Yanille',
+    'Port Khazard', 'Hemenster', 'Fishing Guild', 'Ranging Guild', 'Legends\' Guild',
+    'Tree Gnome Stronghold', 'Gnome Village', 'Witchaven', 'Piscatoris Fishing Colony',
     'Feldip Hills', 'Baxtorian Falls', 'Otto\'s Grotto', 'Barbarian Outpost', 'Fight Arena'
   ],
   'Karamja': [
-    'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle', 
+    'Musa Point', 'Brimhaven', 'Tai Bwo Wannai', 'Shilo Village', 'Kharazi Jungle',
     'Mor Ul Rek (TzHaar City)', 'Crandor'
   ],
   'Kharidian Desert': [
-    'Al Kharid', 'Duel Arena / PvP Arena', 'Shantay Pass', 'Pollnivneach', 'Nardah', 
-    'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp', 'Ruins of Uzer', 
+    'Al Kharid', 'Duel Arena / PvP Arena', 'Shantay Pass', 'Pollnivneach', 'Nardah',
+    'Sophanem', 'Menaphos', 'Bandit Camp', 'Bedabin Camp', 'Ruins of Uzer',
     'Mage Training Arena', 'Agility Pyramid', 'Giants\' Plateau', 'Kalphite Lair'
   ],
   'Morytania': [
-    'Canifis', 'Port Phasmatys', 'Mort\'ton', 'Barrows', 'Burgh de Rott', 'Meiyerditch', 
-    'Darkmeyer', 'Slepe', 'Ver Sinhaza', 'Fenkenstrain\'s Castle', 'Slayer Tower', 
-    'Mort Myre Swamp', 'Haunted Mine', 'Haunted Woods', 'Harmony Island', 
+    'Canifis', 'Port Phasmatys', 'Mort\'ton', 'Barrows', 'Burgh de Rott', 'Meiyerditch',
+    'Darkmeyer', 'Slepe', 'Ver Sinhaza', 'Fenkenstrain\'s Castle', 'Slayer Tower',
+    'Mort Myre Swamp', 'Haunted Mine', 'Haunted Woods', 'Harmony Island',
     'Mos Le\'Harmless', 'Braindeath Island', 'Dragontooth Island'
   ],
   'Fremennik': [
-    'Rellekka', 'Neitiznot', 'Jatizso', 'Miscellania & Etceteria', 'Waterbirth Island', 
+    'Rellekka', 'Neitiznot', 'Jatizso', 'Miscellania & Etceteria', 'Waterbirth Island',
     'Lunar Isle', 'Mountain Camp', 'Lighthouse', 'Keldagrim'
   ],
   'Tirannwn': [
-    'Prifddinas', 'Lletya', 'Tyras Camp', 'Elf Camp', 'Isafdar', 'Zul-Andra', 
+    'Prifddinas', 'Lletya', 'Tyras Camp', 'Elf Camp', 'Isafdar', 'Zul-Andra',
     'Arandar', 'Gwenith', 'Iorwerth Camp'
   ],
   'Wilderness': [
-    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze', 
-    'Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery', 
+    'Ferox Enclave', 'Wilderness Volcano', 'Chaos Temple', 'Rogues\' Castle', 'Lava Maze',
+    'Bandit Camp', 'Dark Warriors\' Fortress', 'Graveyard of Shadows', 'Forgotten Cemetery',
     'Resource Area', 'Mage Arena', 'Scorpia\'s Cave', 'Fountain of Rune', 'Wilderness God Wars Dungeon'
   ],
   'Kourend & Kebos': [
-    'Kourend Castle', 'Hosidius', 'Piscarilius', 'Shayzien', 'Lovakengj', 'Arceuus', 
-    'Kebos Lowlands', 'Molch', 'Farming Guild', 'Woodcutting Guild', 'Mount Quidamortem', 
+    'Kourend Castle', 'Hosidius', 'Piscarilius', 'Shayzien', 'Lovakengj', 'Arceuus',
+    'Kebos Lowlands', 'Molch', 'Farming Guild', 'Woodcutting Guild', 'Mount Quidamortem',
     'Mount Karuulm', 'Catacombs of Kourend', 'Land\'s End', 'Wintertodt Camp'
   ],
   'Varlamore': [
-    'Civitas illa Fortis', 'Avium Savannah', 'Cam Torum', 'Ralos\' Rise', 'Darkfrost', 
+    'Civitas illa Fortis', 'Avium Savannah', 'Cam Torum', 'Ralos\' Rise', 'Darkfrost',
     'Hunter\'s Guild', 'Aldarin', 'The Stranglewood'
   ],
   'Islands & Others': [
     'Fossil Island', 'Ape Atoll', 'Zanaris', 'Tutorial Island'
   ],
   'The Open Seas': [
-    'Pandemonium', 'The Great Conch', 'The Little Pearl', 'Drumstick Isle', 'Ledger Island', 
-    'Brittle Island', 'Vatricos Island', 'Laguna Auror', 'Chin Champa Island', 'Doggos Island', 
-    'Splinter Island', 'Chard Island', 'Grimstone', 'Isle of Bones', 'Minotaur\'s Rest', 
+    'Pandemonium', 'The Great Conch', 'The Little Pearl', 'Drumstick Isle', 'Ledger Island',
+    'Brittle Island', 'Vatricos Island', 'Laguna Auror', 'Chin Champa Island', 'Doggos Island',
+    'Splinter Island', 'Chard Island', 'Grimstone', 'Isle of Bones', 'Minotaur\'s Rest',
     'The Pincers', 'Barracuda Trials', 'Crabclaw Isle', 'Isle of Souls (Expanded)'
   ]
 };
