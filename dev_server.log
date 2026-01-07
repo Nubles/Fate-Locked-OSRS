@@ -1,0 +1,11 @@
+
+> fate-locked-uim@1.0.0 dev
+> vite --port 3000
+
+
+  VITE v4.5.14  ready in 365 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
+9:27:12 AM [vite] page reload data/items.ts
+9:30:14 AM [vite] page reload data/items.ts
